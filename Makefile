@@ -1,11 +1,11 @@
 CC = gcc
 CXX = g++
 CFLAGS = -Wall
-CXXFLAGS = -D__STDC_CONSTANT_MACROS $(CFLAGS)
-INCPATH = -I/usr/local/x86_64-unknown-linux-gnu/include
+CXXFLAGS =  $(CFLAGS)
+INCPATH = -I/usr/include
 LINK = g++
-LFLAGS = -L/usr/local/x86_64-unknown-linux-gnu/lib
-LIBS = -lavcodec -lavformat -lavdevice -lswscale -lavutil -lx264
+LFLAGS = -L/usr/lib
+LIBS = -lopencv_core -lopencv_highgui -lopencv_imgproc
 
 all: stabilize
 
