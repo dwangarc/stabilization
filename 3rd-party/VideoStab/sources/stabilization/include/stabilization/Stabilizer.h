@@ -17,6 +17,7 @@
 namespace VideoLib{
 
 using namespace Common;
+using namespace cv;
 
 class Stabilizer {
 public:
