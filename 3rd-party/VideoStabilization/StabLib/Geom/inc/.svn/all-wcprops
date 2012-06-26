@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/winlib/!svn/ver/322/VideoStabilization/StabLib/Geom/inc
+END
+Point.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/winlib/!svn/ver/322/VideoStabilization/StabLib/Geom/inc/Point.h
+END
+vector3D.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/winlib/!svn/ver/284/VideoStabilization/StabLib/Geom/inc/vector3D.h
+END
+geom_alg.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/winlib/!svn/ver/284/VideoStabilization/StabLib/Geom/inc/geom_alg.h
+END
+rotation.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/winlib/!svn/ver/284/VideoStabilization/StabLib/Geom/inc/rotation.h
+END
+position.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/winlib/!svn/ver/284/VideoStabilization/StabLib/Geom/inc/position.h
+END

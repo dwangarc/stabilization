@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/winlib/!svn/ver/332/VideoStabilization/StabLib/RTP
+END
+RTP_Receiver.h
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/winlib/!svn/ver/324/VideoStabilization/StabLib/RTP/RTP_Receiver.h
+END
+RTP_Receiver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/winlib/!svn/ver/332/VideoStabilization/StabLib/RTP/RTP_Receiver.cpp
+END

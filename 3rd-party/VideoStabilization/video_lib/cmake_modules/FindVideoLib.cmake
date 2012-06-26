@@ -1,0 +1,27 @@
+#FIND_PACKAGE(Boost 1.41 REQUIRED system)
+FIND_PACKAGE(ImageProc REQUIRED)
+
+# Include directories for project
+GET_FILENAME_COMPONENT(VIDEO_LIB_CMAKE_CURRENT_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+SET(VIDEO_LIB_INCLUDE_DIR
+ #   ${Boost_INCLUDE_DIRS}
+    ${IMAGE_PROC_INCLUDE_DIR}
+	${VIDEO_LIB_CMAKE_CURRENT_DIR}/../include
+)
+
+# Project library name
+SET(VIDEO_LIB_LIBRARY video_lib)
+
+# Project dependenses
+SET(VIDEO_LIB_LIBRARIES
+    ${VIDEO_LIB_LIBRARY}
+	${IMAGE_PROC_LIBRARIES}
+#	${Boost_LIBRARIES}
+)
+
+# Result flag
+SET(VIDEO_LIB_FOUND TRUE)
+
+# Project specific global definitions
+SET(VIDEO_LIB_DEFINITIONS
+)

@@ -1,0 +1,161 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/GUI
+END
+MainFrm.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/winlib/!svn/ver/323/VideoStabilization/VideoStabilization/GUI/MainFrm.h
+END
+AboutDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/winlib/!svn/ver/290/VideoStabilization/VideoStabilization/GUI/AboutDialog.h
+END
+ParamsDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/332/VideoStabilization/VideoStabilization/GUI/ParamsDialog.cpp
+END
+ModeDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/321/VideoStabilization/VideoStabilization/GUI/ModeDialog.cpp
+END
+SavingDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/302/VideoStabilization/VideoStabilization/GUI/SavingDialog.cpp
+END
+CameraDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/292/VideoStabilization/VideoStabilization/GUI/CameraDialog.cpp
+END
+ParamsDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/332/VideoStabilization/VideoStabilization/GUI/ParamsDialog.h
+END
+ModeDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/winlib/!svn/ver/321/VideoStabilization/VideoStabilization/GUI/ModeDialog.h
+END
+StabilizeGUIStart.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/winlib/!svn/ver/323/VideoStabilization/VideoStabilization/GUI/StabilizeGUIStart.cpp
+END
+SavingDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/302/VideoStabilization/VideoStabilization/GUI/SavingDialog.h
+END
+CameraDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/292/VideoStabilization/VideoStabilization/GUI/CameraDialog.h
+END
+DistortionDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/winlib/!svn/ver/294/VideoStabilization/VideoStabilization/GUI/DistortionDialog.cpp
+END
+ChildView.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/GUI/ChildView.cpp
+END
+StabilizeGUIStart.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/323/VideoStabilization/VideoStabilization/GUI/StabilizeGUIStart.h
+END
+DeStabilizeDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/winlib/!svn/ver/291/VideoStabilization/VideoStabilization/GUI/DeStabilizeDialog.cpp
+END
+DistortionDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/winlib/!svn/ver/291/VideoStabilization/VideoStabilization/GUI/DistortionDialog.h
+END
+ChildView.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/winlib/!svn/ver/332/VideoStabilization/VideoStabilization/GUI/ChildView.h
+END
+AnalyzeDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/winlib/!svn/ver/291/VideoStabilization/VideoStabilization/GUI/AnalyzeDialog.cpp
+END
+DeStabilizeDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/291/VideoStabilization/VideoStabilization/GUI/DeStabilizeDialog.h
+END
+RTP_Dialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/326/VideoStabilization/VideoStabilization/GUI/RTP_Dialog.cpp
+END
+MotionDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/305/VideoStabilization/VideoStabilization/GUI/MotionDialog.cpp
+END
+AnalyzeDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/winlib/!svn/ver/291/VideoStabilization/VideoStabilization/GUI/AnalyzeDialog.h
+END
+MainFrm.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/winlib/!svn/ver/332/VideoStabilization/VideoStabilization/GUI/MainFrm.cpp
+END
+RTP_Dialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/winlib/!svn/ver/326/VideoStabilization/VideoStabilization/GUI/RTP_Dialog.h
+END
+AboutDialog.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/winlib/!svn/ver/290/VideoStabilization/VideoStabilization/GUI/AboutDialog.cpp
+END
+MotionDialog.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/305/VideoStabilization/VideoStabilization/GUI/MotionDialog.h
+END

@@ -1,0 +1,449 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MODE_DIALOG DIALOGEX 0, 0, 189, 154
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mode"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,31,133,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,109,133,50,14
+    CONTROL         "Стабилизация",IDC_STABILIZE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,23,107,10
+    CONTROL         "Генерация нестабильного видео",IDC_UNSTABILIZE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,40,130,10
+    CONTROL         "Анализ параметров видео",IDC_ANALYZE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,58,109,10
+    CONTROL         "Исходное видео",IDC_BASE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,76,71,10
+    CONTROL         "Детектор движения",IDC_MOTION,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,95,102,10
+    CONTROL         "Сопровождение цели",IDC_TRACK,"Button",BS_AUTORADIOBUTTON | WS_GROUP,35,113,102,10
+END
+
+IDD_PARAMS_DIALOG DIALOGEX 0, 0, 257, 310
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,55,289,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,152,289,50,14
+    EDITTEXT        IDC_EDIT_ITERATIONS,180,21,40,17,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PYR_SIZE,180,45,40,17,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DOWNSCALE,180,69,40,17,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_ALPHA,180,93,40,17,ES_AUTOHSCROLL
+    LTEXT           "Число итераций",IDC_STATIC,21,21,81,17,SS_CENTERIMAGE
+    LTEXT           "Число уровней",IDC_STATIC,21,45,81,17,SS_CENTERIMAGE
+    LTEXT           "Уменьшение (1,2 or 4)",IDC_STATIC,21,69,81,17,SS_CENTERIMAGE
+    LTEXT           "Параметр стабилизации",IDC_STATIC,21,93,81,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_BAND_WIDTH,180,117,40,17,ES_AUTOHSCROLL
+    LTEXT           "Ширина границы",IDC_STATIC,21,117,81,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_ITERATIONS1,180,141,40,17,ES_AUTOHSCROLL
+    LTEXT           "Число итераций на размере 0.5",IDC_STATIC,21,141,142,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_ITERATIONS2,180,165,40,17,ES_AUTOHSCROLL
+    LTEXT           "Число итераций на размере 0.25",IDC_STATIC,21,165,145,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_CORNER_DISTANCE,180,189,40,17,ES_AUTOHSCROLL
+    LTEXT           "Максимальное смещение угла изображения",IDC_STATIC,21,189,151,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_SAFE_SHIFT,180,214,40,17,ES_AUTOHSCROLL
+    LTEXT           "Критическое смещение",IDC_STATIC,21,214,151,17,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDIT_SHIFT_PARAM,180,239,40,17,ES_AUTOHSCROLL
+    LTEXT           "Параметр изменения alpha",IDC_STATIC,21,239,151,17,SS_CENTERIMAGE
+    CONTROL         "BGR цвет",IDC_EDIT_BGR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,265,90,11
+END
+
+IDD_DISTORTION_DIALOG DIALOGEX 0, 0, 211, 164
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Distortion params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,31,143,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,125,143,50,14
+    CONTROL         "Коррекция дисторсии",IDC_DISTORTION_COMPENSATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,16,162,15
+    EDITTEXT        IDC_DISTORTION_FX,45,40,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_FY,140,40,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_CX,45,65,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_CY,140,65,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_K1,45,91,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_K2,140,91,40,14,ES_AUTOHSCROLL
+    LTEXT           "Fx",IDC_STATIC,22,40,19,14,SS_CENTERIMAGE
+    LTEXT           "Fy",IDC_STATIC,117,40,19,14,SS_CENTERIMAGE
+    LTEXT           "Cx",IDC_STATIC,22,65,19,14,SS_CENTERIMAGE
+    LTEXT           "Cy",IDC_STATIC,117,65,19,14,SS_CENTERIMAGE
+    LTEXT           "K1",IDC_STATIC,22,91,19,14,SS_CENTERIMAGE
+    LTEXT           "K2",IDC_STATIC,117,91,19,14,SS_CENTERIMAGE
+    EDITTEXT        IDC_DISTORTION_P1,46,117,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTORTION_P2,140,117,40,14,ES_AUTOHSCROLL
+    LTEXT           "P1",IDC_STATIC,22,117,19,14,SS_CENTERIMAGE
+    LTEXT           "P2",IDC_STATIC,118,117,19,14,SS_CENTERIMAGE
+END
+
+IDD_DESTAB_DIALOG DIALOGEX 0, 0, 272, 127
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Destabilizing params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,58,106,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,170,106,50,14
+    LTEXT           "Максимальное отклонение по вертикали",IDC_STATIC,30,22,146,16,SS_CENTERIMAGE
+    LTEXT           "Максимальная отклонение по горизонтали",IDC_STATIC,30,50,149,16,SS_CENTERIMAGE
+    LTEXT           "Максимальный угол поворота",IDC_STATIC,30,77,145,16,SS_CENTERIMAGE
+    EDITTEXT        IDC_DESTAB_SHIFT_X,187,22,57,16,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESTAB_SHIFT_Y,187,50,57,16,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESTAB_SHIFT_ANGLE,187,77,57,16,ES_AUTOHSCROLL
+END
+
+IDD_ANALYZE_DIALOG DIALOGEX 0, 0, 248, 138
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Analyze results"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,49,117,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,151,117,50,14
+    EDITTEXT        IDC_ANALYZE_SHIFT_X,160,23,52,17,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_ANALYZE_SHIFT_Y,160,49,52,17,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_ANALYZE_SHIFT_ANGLE,160,76,52,17,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Тряска по горизонтали в пикселях",IDC_STATIC,25,23,118,17,SS_CENTERIMAGE
+    LTEXT           "Тряска по вертикали в пикселях",IDC_STATIC,25,49,123,17,SS_CENTERIMAGE
+    LTEXT           "Параметры вращения",IDC_STATIC,25,76,98,17,SS_CENTERIMAGE
+END
+
+IDD_CAMERA_DIALOG DIALOGEX 0, 0, 234, 71
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Camera connection params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Подключиться",IDOK,50,50,64,14
+    PUSHBUTTON      "Отмена",IDCANCEL,135,50,62,14
+    EDITTEXT        IDC_EDIT_CAM_IP,86,20,118,14,ES_AUTOHSCROLL
+    LTEXT           "IP адрес камеры",IDC_STATIC,16,20,61,14,SS_CENTERIMAGE
+END
+
+IDD_SAVING_DIALOG DIALOGEX 0, 0, 348, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Saving params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,101,69,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,198,69,50,14
+    CONTROL         "Путь для сохранения видео",IDC_SAVE_RES_VIDEO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,17,137,16
+    EDITTEXT        IDC_RES_VIDEO_PATH,191,17,115,17,ES_AUTOHSCROLL
+    CONTROL         "Путь для сохранения исходного видео",IDC_SAVE_BASE_VIDEO,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,41,151,16
+    EDITTEXT        IDC_BASE_VIDEO_PATH,191,41,115,17,ES_AUTOHSCROLL
+END
+
+IDD_MOTION_DIALOG DIALOGEX 0, 0, 263, 197
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Motion capture params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,61,176,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,155,176,50,14
+    LTEXT           "Минимальный размер объекта",IDC_STATIC,26,19,143,12,SS_CENTERIMAGE
+    LTEXT           "Минимальный размер пустого пространства",IDC_STATIC,26,39,150,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_MIN_OBJ,177,19,54,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOTION_MIN_SPACE,177,39,54,13,ES_AUTOHSCROLL
+    LTEXT           "EPS",IDC_STATIC,26,59,60,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_EPS,177,59,54,13,ES_AUTOHSCROLL
+    LTEXT           "Частота обновления фона (итерации)",IDC_STATIC,26,80,143,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_ITER,177,80,54,13,ES_AUTOHSCROLL
+    LTEXT           "EPS для оставленных предметов",IDC_STATIC,26,102,143,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_BASE_EPS,177,102,54,13,ES_AUTOHSCROLL
+    LTEXT           "Уменьшение изображения",IDC_STATIC,26,124,100,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_DOWNSCALE,177,124,54,13,ES_AUTOHSCROLL
+    LTEXT           "Сглаживание объектов",IDC_STATIC,26,147,100,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_MOTION_SMOOTH,177,147,54,13,ES_AUTOHSCROLL
+END
+
+IDD_RTP_DIALOG DIALOGEX 0, 0, 234, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "RTP connection params"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Подключиться",IDOK,45,63,64,14
+    PUSHBUTTON      "Отмена",IDCANCEL,130,63,62,14
+    EDITTEXT        IDC_EDIT_CAM_PORT,86,18,118,14,ES_AUTOHSCROLL
+    LTEXT           "Порт",IDC_STATIC,16,18,61,14,SS_CENTERIMAGE
+    CONTROL         "Использовать деинтерлайсинг",IDC_DEINTERLACE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,42,121,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_MODE_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 182
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_PARAMS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 303
+    END
+
+    IDD_DISTORTION_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 204
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_DESTAB_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 265
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+
+    IDD_ANALYZE_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 241
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 131
+    END
+
+    IDD_CAMERA_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_SAVING_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 341
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_MOTION_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 190
+    END
+
+    IDD_RTP_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_STABILIZE           ICON                    "Stabilize.ico"
+IDI_SMALL               ICON                    "small.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_STABILIZE MENU 
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "Открыть &фото",               IDM_OPENFILE
+        MENUITEM "Открыть &видео",              IDM_OPENVIDEO
+        MENUITEM "Открыть &камеру",             IDM_OPENURL
+        MENUITEM "Открыть R&TP",                ID_OPEN_RTP
+        MENUITEM SEPARATOR
+        MENUITEM "Вы&ход",                      IDM_EXIT
+    END
+    POPUP "&Настройки"
+    BEGIN
+        MENUITEM "&Режим работы",               IDM_MODE
+        MENUITEM "&Параметры алгоритма",        IDM_PARAMS
+        MENUITEM "&Коррекция дисторсии",        ID_TOOLS_DISTORTION
+        MENUITEM "Параметры &дестабилизации",   ID_TOOLS_DESTABILIZINGPARAMS
+        MENUITEM "Ре&зультаты анализа видео",   ID_TOOLS_ANALIZATIONRESULTS
+        MENUITEM "&Сохранение видео",           ID_TOOLS_SAVINGVIDEOPARAMS
+        MENUITEM "Параметры детектора д&вижения", ID_TOOLS_MOTIONCAPTUREPARAMS
+        MENUITEM SEPARATOR
+        MENUITEM "П&ерезапуск",                 ID_TOOLS_RESTART
+        MENUITEM "Па&уза",                      ID_TOOLS_PAUSE
+    END
+    POPUP "&Помощь"
+    BEGIN
+        MENUITEM "&О программе ...",            IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_STABILIZE ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Russian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 219, 71
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Stabilized Vision"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_STABILIZE,IDC_STATIC,14,14,21,20
+    CTEXT           "????????? ???????????? ?????, ?????? 1.0",IDC_STATIC,42,14,158,8,SS_NOPREFIX
+    CTEXT           "Copyright (C)\n ???????-????, 2010",IDC_STATIC,42,26,141,20
+    DEFPUSHBUTTON   "OK",IDOK,162,50,50,14,WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 212
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "Stabilized Vision"
+    IDC_STABILIZE           "STABILIZED VISION"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

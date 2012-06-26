@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/winlib/!svn/ver/336/VideoStabilization/StabLib/ImageProc/src
+END
+Color.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/winlib/!svn/ver/319/VideoStabilization/StabLib/ImageProc/src/Color.cpp
+END
+PicDerivative.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/326/VideoStabilization/StabLib/ImageProc/src/PicDerivative.cpp
+END
+PicturePainter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/winlib/!svn/ver/322/VideoStabilization/StabLib/ImageProc/src/PicturePainter.cpp
+END
+PictureAlgs.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/326/VideoStabilization/StabLib/ImageProc/src/PictureAlgs.cpp
+END
+PictureConverter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/336/VideoStabilization/StabLib/ImageProc/src/PictureConverter.cpp
+END
+PictureUpgrade.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/winlib/!svn/ver/326/VideoStabilization/StabLib/ImageProc/src/PictureUpgrade.cpp
+END
+IplImageWrapper.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/winlib/!svn/ver/315/VideoStabilization/StabLib/ImageProc/src/IplImageWrapper.cpp
+END
+stereo_converter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/336/VideoStabilization/StabLib/ImageProc/src/stereo_converter.cpp
+END
+gaussian.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/winlib/!svn/ver/303/VideoStabilization/StabLib/ImageProc/src/gaussian.cpp
+END
+Picture.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/winlib/!svn/ver/336/VideoStabilization/StabLib/ImageProc/src/Picture.cpp
+END

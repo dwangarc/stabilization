@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/MotionDetector/src
+END
+MotionDetector.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/MotionDetector/src/MotionDetector.cpp
+END
+StablePicDetector.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/winlib/!svn/ver/318/VideoStabilization/VideoStabilization/MotionDetector/src/StablePicDetector.cpp
+END

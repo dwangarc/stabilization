@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/Actions/src
+END
+BaseVideo.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/Actions/src/BaseVideo.cpp
+END
+Analyzer.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/winlib/!svn/ver/321/VideoStabilization/VideoStabilization/Actions/src/Analyzer.cpp
+END
+Stabilizator.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/winlib/!svn/ver/336/VideoStabilization/VideoStabilization/Actions/src/Stabilizator.cpp
+END
+UnStabilizator.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/winlib/!svn/ver/321/VideoStabilization/VideoStabilization/Actions/src/UnStabilizator.cpp
+END
+Tracker.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/324/VideoStabilization/VideoStabilization/Actions/src/Tracker.cpp
+END
+MotionDetectorAction.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/winlib/!svn/ver/321/VideoStabilization/VideoStabilization/Actions/src/MotionDetectorAction.cpp
+END

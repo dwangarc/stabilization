@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/winlib/!svn/ver/333/VideoStabilization/StabLib/FramesGetters
+END
+JpegRtpUdpReceiver.h
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/332/VideoStabilization/StabLib/FramesGetters/JpegRtpUdpReceiver.h
+END
+VideoReader.h
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/VideoReader.h
+END
+JpegRTP_Receiver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/winlib/!svn/ver/331/VideoStabilization/StabLib/FramesGetters/JpegRTP_Receiver.cpp
+END
+JpegReceiver.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/JpegReceiver.h
+END
+JpegWrap.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/JpegWrap.cpp
+END
+frames_reader.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/winlib/!svn/ver/312/VideoStabilization/StabLib/FramesGetters/frames_reader.cpp
+END
+JpegRTP_Receiver.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/JpegRTP_Receiver.h
+END
+JpegWrap.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/JpegWrap.h
+END
+frames_reader.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/323/VideoStabilization/StabLib/FramesGetters/frames_reader.h
+END
+JpegRtpUdpReceiver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/winlib/!svn/ver/333/VideoStabilization/StabLib/FramesGetters/JpegRtpUdpReceiver.cpp
+END
+VideoReader.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/winlib/!svn/ver/301/VideoStabilization/StabLib/FramesGetters/VideoReader.cpp
+END
+JpegReceiver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/winlib/!svn/ver/328/VideoStabilization/StabLib/FramesGetters/JpegReceiver.cpp
+END

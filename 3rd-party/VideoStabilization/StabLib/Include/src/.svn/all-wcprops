@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/winlib/!svn/ver/325/VideoStabilization/StabLib/Include/src
+END
+capture_log.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/winlib/!svn/ver/284/VideoStabilization/StabLib/Include/src/capture_log.cpp
+END
+MediatorParams.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/winlib/!svn/ver/325/VideoStabilization/StabLib/Include/src/MediatorParams.cpp
+END
+RegistryParamsSaver.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/winlib/!svn/ver/309/VideoStabilization/StabLib/Include/src/RegistryParamsSaver.cpp
+END
