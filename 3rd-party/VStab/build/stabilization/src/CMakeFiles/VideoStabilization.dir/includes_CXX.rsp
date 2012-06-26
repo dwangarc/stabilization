@@ -1,0 +1,1 @@
+-IC:/opencv/install/include -IC:/opencv/install/include/opencv -I"C:/Program Files/boost_1_49_0" -IC:/Users/Poruchik-bI/workspace/VStab/sources/stabilization/cmake_modules/../include 

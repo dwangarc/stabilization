@@ -1,0 +1,58 @@
+#!/bin/bash
+ROOT=`pwd`
+cd $1
+BUILD_DIR="release_build"
+BUILD_TYPE="Release"
+
+PROJECT_ROOT=`pwd`
+
+# временная директория для сборки
+if [[ -d "${BUILD_DIR}" ]]; then
+	rm -rf "${BUILD_DIR}"
+fi
+
+mkdir "${BUILD_DIR}"
+cd "${BUILD_DIR}"
+
+
+# конфигурация проекта
+cmake \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+	../sources
+
+if [ $? != 0 ]; then
+	echo "Configure stage failed"
+	exit 1
+fi
+
+# сборка проекта
+# временное отключение сборки в 4 потока
+#make -j4
+make -j1
+
+if [ $? != 0 ]; then
+	echo "Build stage failed"
+	exit 1
+fi
+
+# генерация дистрибутива и "вытаскивание" его имени
+DISTRIB_FILE_NAME=`make package | gawk 'match($0, "Package (.*) generated", a) { print a[1] }'`
+
+if [ $? != 0 ]; then
+	echo "Generate distr stage failed"
+	exit 1
+fi
+
+# в конце файл должен быть там, откуда был вызван скрипт
+mv "${DISTRIB_FILE_NAME}" "${ROOT}"
+
+if [ $? != 0 ]; then
+	echo "Failed to move distrib file " ${DISTRIB_FILE_NAME}
+	exit 1
+else
+	echo "Distributive successfully built: "${DISTRIB_FILE_NAME##*/}
+fi
+
+# удаление временной директории
+cd "${PROJECT_ROOT}"
+rm -rf "${BUILD_DIR}"

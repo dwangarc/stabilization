@@ -1,0 +1,2 @@
+C:\MinGW\bin\ar.exe cr libstabilization.a  CMakeFiles/stabilization.dir/src/gui/Builder.cpp.obj CMakeFiles/stabilization.dir/src/gui/VisualHolder.cpp.obj CMakeFiles/stabilization.dir/src/main.cpp.obj CMakeFiles/stabilization.dir/src/Stabilizer.cpp.obj CMakeFiles/stabilization.dir/src/video/Frame.cpp.obj CMakeFiles/stabilization.dir/src/video/FrameBuffer.cpp.obj CMakeFiles/stabilization.dir/src/video/FrameCapture.cpp.obj
+C:\MinGW\bin\ranlib.exe libstabilization.a

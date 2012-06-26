@@ -1,0 +1,2 @@
+C:/Users/Poruchik-bI/workspace/VStab/build/stabilization/src/CMakeFiles/VideoStabilization.dir
+C:/Users/Poruchik-bI/workspace/VStab/build/stabilization/CMakeFiles/stabilization.dir

@@ -1,0 +1,23 @@
+#!/bin/bash
+cd $1
+BUILD_DIR="build"
+BUILD_TYPE="Debug"
+
+if [[ $2 != "" ]]; then
+	BUILD_TYPE=${2}
+fi
+
+if [[ -d ${BUILD_DIR} ]]; then
+	if [[ -f ${BUILD_DIR}/CMakeCache.txt  ]]; then
+		rm ${BUILD_DIR}/CMakeCache.txt
+	fi
+else
+	mkdir ${BUILD_DIR}
+fi
+
+cd ${BUILD_DIR}
+
+cmake \
+	-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+	-DCMAKE_INSTALL_PREFIX=../ \
+	../sources

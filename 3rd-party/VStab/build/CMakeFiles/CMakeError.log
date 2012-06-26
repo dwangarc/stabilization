@@ -1,0 +1,18 @@
+Detecting C compiler ABI info failed to compile with the following output:
+Change Dir: C:/Users/Poruchik-bI/workspace/VStab/build/CMakeFiles/CMakeTmp
+
+Run Build Command:C:/MinGW/bin/mingw32-make.exe "cmTryCompileExec/fast"
+C:/MinGW/bin/mingw32-make.exe -f CMakeFiles\cmTryCompileExec.dir\build.make CMakeFiles/cmTryCompileExec.dir/build
+C:/MinGW/bin/mingw32-make.exe: Interrupt/Exception caught (code = 0xc0000005, addr = 0x0000000000410AF0)
+mingw32-make.exe: *** [cmTryCompileExec/fast] Error 255
+
+
+Detecting C compiler ABI info failed to compile with the following output:
+Change Dir: C:/Users/Poruchik-bI/workspace/VStab/build/CMakeFiles/CMakeTmp
+
+Run Build Command:C:/MinGW/bin/mingw32-make.exe "cmTryCompileExec/fast"
+C:/MinGW/bin/mingw32-make.exe -f CMakeFiles\cmTryCompileExec.dir\build.make CMakeFiles/cmTryCompileExec.dir/build
+C:/MinGW/bin/mingw32-make.exe: Interrupt/Exception caught (code = 0xc0000005, addr = 0x0000000000410AF0)
+mingw32-make.exe: *** [cmTryCompileExec/fast] Error 255
+
+
