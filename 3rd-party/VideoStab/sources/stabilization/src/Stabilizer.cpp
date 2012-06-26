@@ -11,20 +11,12 @@ const size_t Stabilizer::DEFAULT_CONERS_COUNT  = 200;
 const Size Stabilizer::DEFAULT_WND_SIZE = Size(5,5);
 
 Stabilizer::Stabilizer(size_t buf_capacity, Size orig_im_size = Size(0,0), Size gray_im_size = Size(0,0)) {
-   //m_enable = !(orig_im_size == Size(0,0) || gray_im_size == Size(0,0));
    m_orig_im_size = orig_im_size;
    m_gray_im_size = gray_im_size;
-   //m_buf_capacity = buf_capacity
-
    m_stabilized_framebuf = new FrameBuffer(buf_capacity);
    m_framebuf = new FrameBuffer(buf_capacity);
-
    m_opt_dist = 2;
    m_min_dist = 0.5;
-
-   //stab_model = OPTIMISTIC_MODEL;
-   //stab_func = POLYNOMIAL_2;
-
    m_max_normal_transform = Mat(Matx33d( 1.09, 0.10, 6
                                        , 0.10, 1.09, 6
                                        , 0.01, 0.01, 1));
@@ -37,20 +29,12 @@ Stabilizer::Stabilizer(size_t buf_capacity, Size orig_im_size = Size(0,0), Size 
    e = Mat(Matx33d( 1, 0, 0
                   , 0, 1, 0
                   , 0, 0, 1));
-
-//   support_homo_vec.push_back(Point2d(0,0))
-//                   .push_back(Point2d(m_orig_im_size.width,0))
-//                   .push_back(Point2d(0,m_orig_im_size.height))
-//                   .push_back(Point2d(m_orig_im_size.width,m_orig_im_size.height));
-
-   //homo_count = 0;
-   //homo_ejections = 0;
    optimistic_k = 3;
 }
 
 Stabilizer::~Stabilizer() { }
 
-bool Stabilizer::captureFrame(){
+bool Stabilizer::captureFrame() {
    FramePtr cap_frame(new Frame());
    FramePtr frame(new Frame());
    m_capture->read(*cap_frame);
@@ -73,7 +57,6 @@ void Stabilizer::stabilize(){
    FramePtr stab_frame(new Frame(Mat(m_orig_im_size,CV_8UC1),false));// = m_stabilized_framebuf->getLast();
    FramePtr stab_frame_delay = m_stabilized_framebuf->getLast();
 
-///////////////////////////////////////////// Optical Flow LK ///////////////////////////////
    findFeatures(frame_delay);
 
    size_t n_f = frame_delay->featuresLK().size();
@@ -82,12 +65,16 @@ void Stabilizer::stabilize(){
    std::vector<float> err_features(n_f);
    std::vector<uchar> status_features(n_f);
 
+   Size winSize = Size(15,15);
+   int maxLevel = 2;
+   TermCriteria termCrit = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS,20,0.01);
+   int flags = 0;
+   double minEigThreshold = 1e-3;
+
    calcOpticalFlowPyrLK( frame_delay->matGray(), frame->matGray()
                        , frame_delay->featuresLK(), next_features
                        , status_features, err_features
-                       , Size(15,15), 2
-                       , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS,20,0.01)
-                       , 0.5, 0, 0.001);
+                       , winSize, maxLevel, termCrit, flags, minEigThreshold);
 
    frame->featuresLK() = next_features;
 
