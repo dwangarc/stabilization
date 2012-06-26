@@ -5,6 +5,30 @@
 using namespace std;
 using namespace cv;
 
+#define MATRIX_IDENTITY Mat(Matx33d(1.,0.,0.\
+                                   ,0.,1.,0.\
+                                   ,0.,0.,1.))
+//Finding features
+#define CORNERS_MAX_COUNT 200
+#define CORNERS_QUALITY 0.05
+#define CORNERS_MIN_DISTANCE 1.0
+#define CORNERS_MASK noArray()
+#define CORNERS_BLOCK_SIZE 5
+#define CORNERS_USE_HARRIS false
+#define CORNERS_HARRIS_PARAM 0.04
+//Refining features
+#define CORNERS_WIN_SIZE Size(5,5)
+#define CORNERS_DEAD_SIZE Size(-1,-1)
+#define CORNERS_ITER_COUNT 30
+#define CORNERS_ITER_EPS 0.03
+//Lucas-Kanade
+#define LK_WIN_SIZE Size(15,15)
+#define LK_MAX_LEVEL 2
+#define LK_ITER_COUNT 20
+#define LK_ITER_EPS 0.01
+#define LK_FLAGS 0
+#define LD_MIN_EIG_THRESHOLD 1e-3
+
 struct Frame {
    Mat img;
    Mat grayImg;
@@ -23,7 +47,7 @@ Frame initFrame(Mat img) {
 }
 
 void findFeatures(Frame& frame) {
-   if(frame.isEjected || frame.features.size() < 0.8*MAX_CORNER_COUNT)
+   if(frame.isEjected || frame.features.size() < 0.8*CORNERS_MAX_COUNT)
       goodFeaturesToTrack( frame.grayImg, frame.features
                          , CORNERS_MAX_COUNT, CORNERS_QUALITY, CORNERS_MIN_DISTANCE
                          , CORNERS_MASK, CORNERS_BLOCK_SIZE, CORNERS_USE_HARRIS
@@ -63,7 +87,7 @@ void stabilize(Frame& last_frame, Frame& frame) {
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
    Mat transform = findTransform(last_frame, frame, statusFeatures);
-   int res = estimateTransform();
+   int res = 1//estimateTransform();
    if(!res) frame.isEjected = true;
    else warpPerspective(frame.img, frame.stabImg, transform, frame.img.size());
 }
