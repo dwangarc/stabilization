@@ -27,7 +27,25 @@ using namespace cv;
 #define LK_ITER_COUNT 20
 #define LK_ITER_EPS 0.01
 #define LK_FLAGS 0
-#define LD_MIN_EIG_THRESHOLD 1e-3
+#define LK_MIN_EIG_THRESHOLD 1e-3
+//Transform estimation
+#define OPTIMISTIC_K 3
+//Hi, capt.
+//Optimal distance between frames
+#define OPTIMAL_DIST 2
+//Minimal distance between frames
+#define MIN_DIST 0.5
+#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.0009, 0.0005, 0.09\
+                                        , 0.0005, 1.0009, 0.09\
+                                        , 0.0001, 0.0001, 1.00))
+#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 1.0, 0.7, 50\
+                                        , 0.7, 1.0, 50\
+                                        , 1.0, 1.0, 1.))
+//Stabilization not required if all elements are respectively greater
+//then in our transformation matrix
+#define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
+                                               , 0.10, 1.09, 6\
+                                               , 0.01, 0.01, 1))
 
 struct Frame {
    Mat img;
@@ -35,6 +53,9 @@ struct Frame {
    Mat stabImg;
    vector<Point2f> features;
    bool isEjected;
+   int numOfStatic;
+   Mat transformToPrev;
+   Mat transformToOrig;
 };
 
 Frame initFrame(Mat img) {
@@ -43,6 +64,9 @@ Frame initFrame(Mat img) {
    frame.stabImg = img.clone();
    cvtColor(frame.img,frame.grayImg,CV_BGR2GRAY);
    frame.isEjected = false;
+   frame.numOfStatic = 0;
+   frame.transformToPrev = MATRIX_IDENTITY;
+   frame.transformToOrig = MATRIX_IDENTITY;
    return frame;
 }
 
@@ -55,9 +79,8 @@ void findFeatures(Frame& frame) {
    cornerSubPix(frame.grayImg, frame.features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
-   for(int i = 0; i < frame.features.rows; i++) {
-      const float* row = frame.features.ptr<float>(i);
-      circle(frame.img,Point(row[0],row[1]),10,-1);
+   for(int i = 0; i < frame.features.size(); i++) {
+      circle(frame.img,frame.features[i],10,-1);
    }
 }
 
@@ -73,7 +96,86 @@ Mat findTransform(Frame& last_frame, Frame& frame, vector<uchar> status) {
       }
    }
    if(status.size() < 4) { return MATRIX_IDENTITY; }
-   return findHomography(last_frame.features, frame.features, CV_RANSAC);
+   //return findHomography(last_frame.features, frame.features, CV_RANSAC);
+   //For some reason the inverse matrix is actually required
+   return findHomography(frame.features, last_frame.features, CV_RANSAC);
+}
+
+bool checkEjection(Mat transform) {
+   for(int i = 0; i < 3; i++)
+      for(int j = 0; j < 3; j++)
+         if(abs(transform.at<double>(i,j)) > MATRIX_MAX_TRANSFORM.at<double>(i,j)) {
+            cout << "Ejection" << endl;
+            return true;
+         }
+   return false;
+}
+
+//Why is it called such?
+double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
+   double dist, max_dist;
+   for(int i = 0; i < 3; i++)
+      for(int j = 0; j < 3; j++) {
+         //Should there be another abs?
+         dist = abs(mat.at<double>(i,j)) / src_mat.at<double>(i,j);
+         if(dist > max_dist) max_dist = dist;
+      }
+   return max_dist;
+}
+
+//Seems to be doing wrong.
+//What numOfStatic is supposed to mean?
+void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
+   Mat transf_vals = transform - MATRIX_IDENTITY;
+   if(checkEjection(transf_vals)) { frame.isEjected = true; transform = MATRIX_IDENTITY; return; }
+   if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
+      frame.numOfStatic = lastFrame.numOfStatic + 1;
+   else
+      frame.transformToPrev = transform;
+
+   double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
+   Mat orig_stab_tr = frame.transformToPrev * lastFrame.transformToOrig;
+   Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
+   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame.isEjected = true; transform = MATRIX_IDENTITY; return; }
+   
+   double orig_stab_dist = calcDistanceTo( stab_transf_vals
+                                         , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
+   double func_val = 1;
+   if(orig_stab_dist > 1)
+      func_val = 1. / pow(log(orig_stab_dist)+1, 1. / OPTIMAL_DIST);
+
+   Mat opt_stab_tr = stab_transf_vals * func_val + MATRIX_IDENTITY;
+   Mat stab_stab_tr = stab_transf_vals * (1 - func_val) + MATRIX_IDENTITY;
+
+   //cout << "original dist: " << orig_dist << endl;
+   //cout << "original -> stab dist: " << orig_stab_dist << endl;
+   //cout << "numOfStatic on start: " << frame.numOfStatic << endl;
+
+   if(orig_stab_dist < 1) {
+      if(frame.numOfStatic - 2 > OPTIMISTIC_K) {
+         //cout << "transform is stab_transf_vals" << endl;
+         transform = stab_transf_vals * 0.8 + MATRIX_IDENTITY;
+      }
+      else {
+         //cout << "transform is orig_stab_tr" << endl;
+         transform = orig_stab_tr;
+      }
+      frame.transformToOrig = transform;
+   } else {
+      if(lastFrame.numOfStatic > OPTIMISTIC_K) {
+         frame.transformToOrig = opt_stab_tr;
+         frame.transformToPrev = stab_stab_tr;
+         //cout << "transform is opt_stab_tr" << endl;
+         transform = opt_stab_tr;
+      } else {
+         frame.numOfStatic = lastFrame.numOfStatic + 1;
+         //cout << "transform is stab_tranf_vals(2)" << endl;
+         transform = stab_transf_vals * 0.9 + MATRIX_IDENTITY;
+         frame.transformToOrig = transform;
+      }
+   }
+   //cout << "numOfStatic: " << frame.numOfStatic << endl;
+   return;
 }
 
 void stabilize(Frame& last_frame, Frame& frame) {
@@ -87,9 +189,8 @@ void stabilize(Frame& last_frame, Frame& frame) {
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
    Mat transform = findTransform(last_frame, frame, statusFeatures);
-   int res = 1//estimateTransform();
-   if(!res) frame.isEjected = true;
-   else warpPerspective(frame.img, frame.stabImg, transform, frame.img.size());
+   estimateTransform(frame, last_frame, transform);
+   warpPerspective(frame.img, frame.stabImg, transform, frame.img.size());
 }
 
 //Images must have same type
