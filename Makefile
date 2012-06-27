@@ -1,22 +1,31 @@
-CROSS_PREFIX=i686-w64-mingw32-
+#CROSS_PREFIX=i686-w64-mingw32-
+#PREFIX=/usr/local/i686-w64-mingw32/
+#TARGET=stabilization.exe
+CROSS_PREFIX=
+PREFIX=/usr
+TARGET=stabilize
+
 CC = $(CROSS_PREFIX)gcc
 CXX = $(CROSS_PREFIX)g++
 CFLAGS = -Wall
 CXXFLAGS = $(CFLAGS)
-INCPATH = -I/usr/local/i686-w64-mingw32/include
-LINK = $(CROSS_PREFIX)g++ -static
-LFLAGS = -L/usr/local/i686-w64-mingw32/lib -L/usr/i686-w64-mingw32/lib -L/usr/lib
-LIBS = 
-EXTRALIBS = -lopencv_core241 -lopencv_highgui241 -lopencv_imgproc241 -lopencv_video241 -lopencv_calib3d241
+INCPATH = -I$(PREFIX)/include
+LINK = $(CROSS_PREFIX)g++ 
+LFLAGS = -L$(PREFIX)/lib
+#LIBS = -lopencv_core241 -lopencv_highgui241 -lopencv_imgproc241 -lopencv_video241 -lopencv_calib3d241
+LIBS = -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_video -lopencv_calib3d
 
-all: stabilize
+all: $(TARGET)
 
-stabilize: main.o
-	$(LINK) -o stabilize $(LFLAGS) $(LIBS) $(EXTRALIBS) main.o
+$(TARGET): stabLib.o main.o
+	$(LINK) $(LFLAGS) -o $(TARGET) main.o stabLib.o $(LIBS)
+
+stabLib.o:
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) stabLib.cpp
 
 main.o:
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) main.cpp
 
 clean:
-	rm -f stabilize
-	rm -f main.o
+	rm -f $(TARGET)
+	rm -f main.o stabLib.o
