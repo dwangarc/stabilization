@@ -17,20 +17,22 @@ void draw(char* windowName, int width, int height, void* img1, void* img2) {
 }
 
 int main(int argc, char *argv[]) {
+   FILE* file = stdin;
+   //FILE* file = fopen("out.video", "rb");
    uint8_t* data;
    int width = 640;
    int height = 480;
    int length = 3*width*height;
 
    data = new uint8_t[length];
-   fread(data, 1, length, stdin);
+   fread(data, 1, length, file);
    Frame *lastFrame = new Frame(width, height, data);
    delete [] data;
 
    namedWindow("stab",1);
    for(;;) {
       data = new uint8_t[length];
-      fread(data, 1, length, stdin);
+      fread(data, 1, length, file);
       Frame *frame = new Frame(width, height, data);
       delete [] data;
       stabilize(lastFrame, frame);
