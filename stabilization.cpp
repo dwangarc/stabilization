@@ -197,7 +197,7 @@ void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
    return;
 }
 
-void DECL_EXPORT stabilize(Frame* lastFrame, Frame* frame) {
+void stabilize(Frame* lastFrame, Frame* frame) {
    //cout << "Commence stabilization" << endl;
    FrameData* frameData = frame->data;
    FrameData* lastFrameData = lastFrame->data;

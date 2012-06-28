@@ -22,7 +22,7 @@ public:
    void* getStabilizedImage();
    // Will NOT make a copy of image
    void* getOriginalImage();
-   friend void DECL_EXPORT stabilize(Frame *lastFrame, Frame *frame);
+   DECL_EXPORT friend void stabilize(Frame *lastFrame, Frame *frame);
 private:
    FrameData* data;
 };
