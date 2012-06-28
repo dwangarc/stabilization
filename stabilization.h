@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #if defined(LINUX)
 #define DECL_EXPORT
 #elif defined(LIBSTABILIZATION)
@@ -12,14 +14,16 @@ class FrameData;
 
 class DECL_EXPORT Frame {
 public:
-   // image should be RGB3
-   // TODO: Check what happens when I `delete image`.
-   Frame(int width, int height, void* image);
+   // image should be BGR3
+   // And it makes a copy of image so you should dispose of it yourself
+   Frame(int width, int height, void *image);
    ~Frame();
+   // Will NOT make a copy of image
    void* getStabilizedImage();
+   // Will NOT make a copy of image
    void* getOriginalImage();
+   friend void DECL_EXPORT stabilize(Frame *lastFrame, Frame *frame);
 private:
    FrameData* data;
 };
 
-void DECL_EXPORT stabilize(Frame lastFrame, Frame frame);

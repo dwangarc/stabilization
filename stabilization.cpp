@@ -6,36 +6,6 @@
 using namespace std;
 using namespace cv;
 
-class FrameData {
-public:
-   cv::Mat img;
-   cv::Mat grayImg;
-   cv::Mat stabImg;
-   std::vector<cv::Point2f> features;
-   bool isEjected;
-   int numOfStatic;
-   cv::Mat transformToPrev;
-   cv::Mat transformToOrig;
-};
-
-//CV_8UC3
-Frame::Frame(int width, int height, void* image) {
-   Mat img;
-   Frame frame;
-   frame.img = img.clone();
-   frame.stabImg = img.clone();
-   cvtColor(frame.img,frame.grayImg,CV_BGR2GRAY);
-   frame.isEjected = false;
-   frame.numOfStatic = 0;
-   frame.transformToPrev = MATRIX_IDENTITY;
-   frame.transformToOrig = MATRIX_IDENTITY;
-   return frame;
-}
-
-Frame::~Frame() {
-   delete data;
-}
-
 #define MATRIX_IDENTITY Mat(Matx33d(1.,0.,0.\
                                    ,0.,1.,0.\
                                    ,0.,0.,1.))
@@ -75,27 +45,72 @@ Frame::~Frame() {
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
 
-void findFeatures(Frame& frame) {
-   if(frame.isEjected || frame.features.size() < 0.8*CORNERS_MAX_COUNT)
-      goodFeaturesToTrack( frame.grayImg, frame.features
+class FrameData {
+public:
+   cv::Mat img;
+   cv::Mat grayImg;
+   cv::Mat stabImg;
+   std::vector<cv::Point2f> features;
+   bool isEjected;
+   int numOfStatic;
+   cv::Mat transformToPrev;
+   cv::Mat transformToOrig;
+};
+
+Frame::Frame(int width, int height, void* image) {
+   this->data = new FrameData();
+   Mat img = Mat(height,width,CV_8UC3,image);
+   this->data->img = img.clone();
+   //cvtColor(this->data->img,this->data->img,CV_RGB2BGR);
+   this->data->stabImg = this->data->img.clone();
+   cvtColor(this->data->img,this->data->grayImg,CV_BGR2GRAY);
+   this->data->isEjected = false;
+   this->data->numOfStatic = 0;
+   this->data->transformToPrev = MATRIX_IDENTITY;
+   this->data->transformToOrig = MATRIX_IDENTITY;
+}
+
+Frame::~Frame() { delete data; }
+
+void* Frame::getStabilizedImage() {
+   if(!this->data->stabImg.isContinuous()) cout << "Not continuous stab" << endl;
+   return this->data->stabImg.ptr();
+   //Mat res = this->data->stabImg.clone();
+   //cvtColor(res,res,CV_BGR2RGB);
+   //if(!res.isContinuous()) cout << "Not continuous stab" << endl;
+   //return res.ptr();
+}
+
+void* Frame::getOriginalImage() {
+   if(!this->data->img.isContinuous()) cout << "Not continuous orig" << endl;
+   return this->data->img.ptr();
+   //Mat res = this->data->img.clone();
+   //cvtColor(res,res,CV_BGR2RGB);
+   //if(!res.isContinuous()) cout << "Not continuous orig" << endl;
+   //return res.ptr();
+}
+
+void findFeatures(FrameData* frame) {
+   if(frame->isEjected || frame->features.size() < 0.8*CORNERS_MAX_COUNT)
+      goodFeaturesToTrack( frame->grayImg, frame->features
                          , CORNERS_MAX_COUNT, CORNERS_QUALITY, CORNERS_MIN_DISTANCE
                          , CORNERS_MASK, CORNERS_BLOCK_SIZE, CORNERS_USE_HARRIS
                          , CORNERS_HARRIS_PARAM);
-   cornerSubPix(frame.grayImg, frame.features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
+   cornerSubPix(frame->grayImg, frame->features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
-   for(int i = 0; i < frame.features.size(); i++) {
-      circle(frame.img,frame.features[i],10,-1);
-   }
+   //for(int i = 0; i < frame->features.size(); i++) {
+   //   circle(frame->img,frame->features[i],10,-1);
+   //}
 }
 
-Mat findTransform(Frame& last_frame, Frame& frame, vector<uchar> status) {
-   if(last_frame.features.size() != frame.features.size())
+Mat findTransform(FrameData* last_frame, FrameData* frame, vector<uchar> status) {
+   if(last_frame->features.size() != frame->features.size())
       return MATRIX_IDENTITY;
    for(int i = 0; i < status.size(); i++) {
       if(!status[i]) {
-         frame.features.erase(frame.features.begin()+i);
-         last_frame.features.erase(last_frame.features.begin()+i);
+         frame->features.erase(frame->features.begin()+i);
+         last_frame->features.erase(last_frame->features.begin()+i);
          status.erase(status.begin()+i);
          i--;
       }
@@ -103,7 +118,7 @@ Mat findTransform(Frame& last_frame, Frame& frame, vector<uchar> status) {
    if(status.size() < 4) { return MATRIX_IDENTITY; }
    //return findHomography(last_frame.features, frame.features, CV_RANSAC);
    //For some reason the inverse matrix is actually required
-   return findHomography(frame.features, last_frame.features, CV_RANSAC);
+   return findHomography(frame->features, last_frame->features, CV_RANSAC);
 }
 
 bool checkEjection(Mat transform) {
@@ -129,18 +144,18 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 }
 
 //What numOfStatic is supposed to mean?
-void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
+void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
-   if(checkEjection(transf_vals)) { frame.isEjected = true; transform = MATRIX_IDENTITY; return; }
+   if(checkEjection(transf_vals)) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
    if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
-      frame.numOfStatic = lastFrame.numOfStatic + 1;
+      frame->numOfStatic = lastFrame->numOfStatic + 1;
    else
-      frame.transformToPrev = transform;
+      frame->transformToPrev = transform;
 
    double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
-   Mat orig_stab_tr = frame.transformToPrev * lastFrame.transformToOrig;
+   Mat orig_stab_tr = frame->transformToPrev * lastFrame->transformToOrig;
    Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
-   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame.isEjected = true; transform = MATRIX_IDENTITY; return; }
+   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
    
    double orig_stab_dist = calcDistanceTo( stab_transf_vals
                                          , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
@@ -156,7 +171,7 @@ void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
    //cout << "numOfStatic on start: " << frame.numOfStatic << endl;
 
    if(orig_stab_dist < 1) {
-      if(frame.numOfStatic - 2 > OPTIMISTIC_K) {
+      if(frame->numOfStatic - 2 > OPTIMISTIC_K) {
          //cout << "transform is stab_transf_vals" << endl;
          transform = stab_transf_vals * 0.8 + MATRIX_IDENTITY;
       }
@@ -164,35 +179,39 @@ void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
          //cout << "transform is orig_stab_tr" << endl;
          transform = orig_stab_tr;
       }
-      frame.transformToOrig = transform;
+      frame->transformToOrig = transform;
    } else {
-      if(lastFrame.numOfStatic > OPTIMISTIC_K) {
-         frame.transformToOrig = opt_stab_tr;
-         frame.transformToPrev = stab_stab_tr;
+      if(lastFrame->numOfStatic > OPTIMISTIC_K) {
+         frame->transformToOrig = opt_stab_tr;
+         frame->transformToPrev = stab_stab_tr;
          //cout << "transform is opt_stab_tr" << endl;
          transform = opt_stab_tr;
       } else {
-         frame.numOfStatic = lastFrame.numOfStatic + 1;
+         frame->numOfStatic = lastFrame->numOfStatic + 1;
          //cout << "transform is stab_tranf_vals(2)" << endl;
          transform = stab_transf_vals * 0.9 + MATRIX_IDENTITY;
-         frame.transformToOrig = transform;
+         frame->transformToOrig = transform;
       }
    }
    //cout << "numOfStatic: " << frame.numOfStatic << endl;
    return;
 }
 
-void DECL_EXPORT stabilize(Frame last_frame, Frame frame) {
-   findFeatures(last_frame);
+void DECL_EXPORT stabilize(Frame* lastFrame, Frame* frame) {
+   //cout << "Commence stabilization" << endl;
+   FrameData* frameData = frame->data;
+   FrameData* lastFrameData = lastFrame->data;
+   findFeatures(lastFrameData);
+   //cout << "Found features" << endl;
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
-   calcOpticalFlowPyrLK( last_frame.grayImg, frame.grayImg
-                       , last_frame.features, frame.features
+   calcOpticalFlowPyrLK( lastFrameData->grayImg, frameData->grayImg
+                       , lastFrameData->features, frameData->features
                        , statusFeatures, errFeatures, LK_WIN_SIZE, LK_MAX_LEVEL
                        , TermCriteria( TermCriteria::COUNT+TermCriteria::EPS
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
-   Mat transform = findTransform(last_frame, frame, statusFeatures);
-   estimateTransform(frame, last_frame, transform);
-   warpPerspective(frame.img, frame.stabImg, transform, frame.img.size());
+   Mat transform = findTransform(lastFrameData, frameData, statusFeatures);
+   estimateTransform(frameData, lastFrameData, transform);
+   warpPerspective(frameData->img, frameData->stabImg, transform, frameData->img.size());
 }
