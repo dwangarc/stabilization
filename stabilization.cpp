@@ -1,9 +1,40 @@
-#include "stabLib.h"
+#include "stabilization.h"
 #include <iostream>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
+
+class FrameData {
+public:
+   cv::Mat img;
+   cv::Mat grayImg;
+   cv::Mat stabImg;
+   std::vector<cv::Point2f> features;
+   bool isEjected;
+   int numOfStatic;
+   cv::Mat transformToPrev;
+   cv::Mat transformToOrig;
+};
+
+//CV_8UC3
+Frame::Frame(int width, int height, void* image) {
+   Mat img;
+   Frame frame;
+   frame.img = img.clone();
+   frame.stabImg = img.clone();
+   cvtColor(frame.img,frame.grayImg,CV_BGR2GRAY);
+   frame.isEjected = false;
+   frame.numOfStatic = 0;
+   frame.transformToPrev = MATRIX_IDENTITY;
+   frame.transformToOrig = MATRIX_IDENTITY;
+   return frame;
+}
+
+Frame::~Frame() {
+   delete data;
+}
 
 #define MATRIX_IDENTITY Mat(Matx33d(1.,0.,0.\
                                    ,0.,1.,0.\
@@ -30,10 +61,7 @@ using namespace cv;
 #define LK_MIN_EIG_THRESHOLD 1e-3
 //Transform estimation
 #define OPTIMISTIC_K 3
-//Hi, capt.
-//Optimal distance between frames
 #define OPTIMAL_DIST 2
-//Minimal distance between frames
 #define MIN_DIST 0.5
 #define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.0009, 0.0005, 0.09\
                                         , 0.0005, 1.0009, 0.09\
@@ -46,18 +74,6 @@ using namespace cv;
 #define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
-
-Frame initFrame(Mat img) {
-   Frame frame;
-   frame.img = img.clone();
-   frame.stabImg = img.clone();
-   cvtColor(frame.img,frame.grayImg,CV_BGR2GRAY);
-   frame.isEjected = false;
-   frame.numOfStatic = 0;
-   frame.transformToPrev = MATRIX_IDENTITY;
-   frame.transformToOrig = MATRIX_IDENTITY;
-   return frame;
-}
 
 void findFeatures(Frame& frame) {
    if(frame.isEjected || frame.features.size() < 0.8*CORNERS_MAX_COUNT)
@@ -112,7 +128,6 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
    return max_dist;
 }
 
-//Seems to be doing wrong.
 //What numOfStatic is supposed to mean?
 void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
@@ -167,7 +182,7 @@ void estimateTransform(Frame& frame, Frame& lastFrame, Mat& transform) {
    return;
 }
 
-void stabilize(Frame& last_frame, Frame& frame) {
+void DECL_EXPORT stabilize(Frame last_frame, Frame frame) {
    findFeatures(last_frame);
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
