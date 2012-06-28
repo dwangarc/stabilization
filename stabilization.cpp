@@ -9,27 +9,44 @@ using namespace cv;
 #define MATRIX_IDENTITY Mat(Matx33d(1.,0.,0.\
                                    ,0.,1.,0.\
                                    ,0.,0.,1.))
+//
 //Finding features
+//
 #define CORNERS_MAX_COUNT 200
+//All corners with less quality coefficient are rejected
 #define CORNERS_QUALITY 0.05
+//Minimal distance allowed between corners
 #define CORNERS_MIN_DISTANCE 1.0
+//Don't apply any mask to search field
 #define CORNERS_MASK noArray()
+//Size of a block for computing derivative covariant matrix
 #define CORNERS_BLOCK_SIZE 5
 #define CORNERS_USE_HARRIS false
 #define CORNERS_HARRIS_PARAM 0.04
+//
 //Refining features
+//
+//Half of the size of the search window used
 #define CORNERS_WIN_SIZE Size(5,5)
+//Half of the size of the central region where summation is not done
+//due to possible singularities
 #define CORNERS_DEAD_SIZE Size(-1,-1)
 #define CORNERS_ITER_COUNT 30
 #define CORNERS_ITER_EPS 0.03
+//
 //Lucas-Kanade
+//
+//Search window size at each pyramid level
 #define LK_WIN_SIZE Size(15,15)
+//How deep is constructed image pyramid
 #define LK_MAX_LEVEL 2
 #define LK_ITER_COUNT 20
 #define LK_ITER_EPS 0.01
 #define LK_FLAGS 0
 #define LK_MIN_EIG_THRESHOLD 1e-3
-//Transform estimation
+//
+//Transform estimation(refinement?)
+//
 #define OPTIMISTIC_K 3
 #define OPTIMAL_DIST 2
 #define MIN_DIST 0.5
@@ -61,7 +78,6 @@ Frame::Frame(int width, int height, void* image) {
    this->data = new FrameData();
    Mat img = Mat(height,width,CV_8UC3,image);
    this->data->img = img.clone();
-   //cvtColor(this->data->img,this->data->img,CV_RGB2BGR);
    this->data->stabImg = this->data->img.clone();
    cvtColor(this->data->img,this->data->grayImg,CV_BGR2GRAY);
    this->data->isEjected = false;
@@ -72,23 +88,9 @@ Frame::Frame(int width, int height, void* image) {
 
 Frame::~Frame() { delete data; }
 
-void* Frame::getStabilizedImage() {
-   if(!this->data->stabImg.isContinuous()) cout << "Not continuous stab" << endl;
-   return this->data->stabImg.ptr();
-   //Mat res = this->data->stabImg.clone();
-   //cvtColor(res,res,CV_BGR2RGB);
-   //if(!res.isContinuous()) cout << "Not continuous stab" << endl;
-   //return res.ptr();
-}
+void* Frame::getStabilizedImage() { return this->data->stabImg.ptr(); }
 
-void* Frame::getOriginalImage() {
-   if(!this->data->img.isContinuous()) cout << "Not continuous orig" << endl;
-   return this->data->img.ptr();
-   //Mat res = this->data->img.clone();
-   //cvtColor(res,res,CV_BGR2RGB);
-   //if(!res.isContinuous()) cout << "Not continuous orig" << endl;
-   //return res.ptr();
-}
+void* Frame::getOriginalImage() { return this->data->img.ptr(); }
 
 void findFeatures(FrameData* frame) {
    if(frame->isEjected || frame->features.size() < 0.8*CORNERS_MAX_COUNT)
@@ -99,14 +101,14 @@ void findFeatures(FrameData* frame) {
    cornerSubPix(frame->grayImg, frame->features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
+   // Draw circles around detected features.
    //for(int i = 0; i < frame->features.size(); i++) {
    //   circle(frame->img,frame->features[i],10,-1);
    //}
 }
 
 Mat findTransform(FrameData* last_frame, FrameData* frame, vector<uchar> status) {
-   if(last_frame->features.size() != frame->features.size())
-      return MATRIX_IDENTITY;
+   if(last_frame->features.size() != frame->features.size()) { return MATRIX_IDENTITY; }
    for(int i = 0; i < status.size(); i++) {
       if(!status[i]) {
          frame->features.erase(frame->features.begin()+i);
@@ -116,8 +118,7 @@ Mat findTransform(FrameData* last_frame, FrameData* frame, vector<uchar> status)
       }
    }
    if(status.size() < 4) { return MATRIX_IDENTITY; }
-   //return findHomography(last_frame.features, frame.features, CV_RANSAC);
-   //For some reason the inverse matrix is actually required
+   // For some reason arguments should be reversed to what documentation says.
    return findHomography(frame->features, last_frame->features, CV_RANSAC);
 }
 
@@ -152,7 +153,7 @@ void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
    else
       frame->transformToPrev = transform;
 
-   double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
+   //double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
    Mat orig_stab_tr = frame->transformToPrev * lastFrame->transformToOrig;
    Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
    if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
@@ -198,13 +199,12 @@ void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
-   //cout << "Commence stabilization" << endl;
    FrameData* frameData = frame->data;
    FrameData* lastFrameData = lastFrame->data;
    findFeatures(lastFrameData);
-   //cout << "Found features" << endl;
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
+   // Optical flow by Lucas-Kanade
    calcOpticalFlowPyrLK( lastFrameData->grayImg, frameData->grayImg
                        , lastFrameData->features, frameData->features
                        , statusFeatures, errFeatures, LK_WIN_SIZE, LK_MAX_LEVEL
@@ -212,6 +212,8 @@ void stabilize(Frame* lastFrame, Frame* frame) {
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
    Mat transform = findTransform(lastFrameData, frameData, statusFeatures);
+   // Refine transformation
    estimateTransform(frameData, lastFrameData, transform);
+   // Apply transformation
    warpPerspective(frameData->img, frameData->stabImg, transform, frameData->img.size());
 }
