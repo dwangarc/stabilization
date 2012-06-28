@@ -12,19 +12,20 @@ using namespace std;
 
 
 void draw(char* windowName, int width, int height, void* img1, void* img2) {
-   //Mat mimg1(height, width, CV_8UC3, img1);
-   //Mat res(max(img1.rows,img2.rows),img1.cols+img2.cols,img1.type());
-   //img1.copyTo(res(Rect(Point(0,0),img1.size())));
-   //img2.copyTo(res(Rect(Point(img1.cols,0),img2.size())));
-   //Mat resSmall;
-   //resize(res,resSmall,Size(1000,300));
-   //imshow(windowName,resSmall);
+   Mat mimg1(height, width, CV_8UC3, img1);
+   Mat mimg2(height, width, CV_8UC3, img2);
+   Mat res(max(mimg1.rows,mimg2.rows),mimg1.cols+mimg2.cols,CV_8UC3);
+   mimg1.copyTo(res(Rect(Point(0,0),mimg1.size())));
+   mimg2.copyTo(res(Rect(Point(mimg1.cols,0),mimg2.size())));
+   Mat resSmall;
+   resize(res,resSmall,Size(1000,300));
+   imshow(windowName,resSmall);
 }
 
 int main(int argc, char *argv[]) {
    char* fmt = "v4l2";
    char* name = "/dev/video0";
-   PixelFormat pix_fmt = PIX_FMT_BGR24;
+   PixelFormat pix_fmt = PIX_FMT_RGB24;
    //Initializing ffmpeg
    avcodec_register_all();
    avdevice_register_all();
