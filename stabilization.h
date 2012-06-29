@@ -10,20 +10,23 @@
 #define DECL_EXPORT __declspec(dllimport)
 #endif
 
-class FrameData;
+class StabilizerData;
 
-class DECL_EXPORT Frame {
+class DECL_EXPORT Stabilizer {
 public:
-   // image should be BGR3
-   // And it makes a copy of image so you should dispose of it yourself
-   Frame(int width, int height, void *image);
-   ~Frame();
-   // Will NOT make a copy of image
+   // When using defaults width and height would have to be given with the first frame
+   Stabilizer(int width = -1, int height = -1);
+   ~Stabilizer();
+   // Width and height must be the same for all frames.
+   // If this is the first frame and Stabilizer was constructed without specifying
+   // width and height, you have to specify them here.
+   // Image must be BGR3 and it makes a copy of it.
+   int addFrame(void *image, int width = -1, int height = -1);
+   // Will give a pointer to internal image in BGR3
    void* getStabilizedImage();
-   // Will NOT make a copy of image
+   // Will give a pointer to internal image in BGR3
    void* getOriginalImage();
-   DECL_EXPORT friend void stabilize(Frame *lastFrame, Frame *frame);
 private:
-   FrameData* data;
+   StabilizerData* data;
 };
 

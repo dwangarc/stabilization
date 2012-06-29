@@ -1,10 +1,12 @@
 #include "stabilization.h"
+//Used here only to display graphics.
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
 using namespace cv;
 using namespace std;
 
+//The only function using opencv directly
 void draw(char* windowName, int width, int height, void* img1, void* img2) {
    Mat mimg1(height, width, CV_8UC3, img1);
    Mat mimg2(height, width, CV_8UC3, img2);
@@ -17,31 +19,30 @@ void draw(char* windowName, int width, int height, void* img1, void* img2) {
 }
 
 int main(int argc, char *argv[]) {
-   FILE* file = stdin;
-   //FILE* file = fopen("out.video", "rb");
+   //Must be rawvideo 640x480 with BGR3 pixels
+   FILE* file = fopen("out.video", "rb");
    uint8_t* data;
    int width = 640;
    int height = 480;
    int length = 3*width*height;
 
+   Stabilizer *stab = new Stabilizer(width,height);
+
    data = new uint8_t[length];
    fread(data, 1, length, file);
-   Frame *lastFrame = new Frame(width, height, data);
+   stab->addFrame(data);
    delete [] data;
 
    namedWindow("stab",1);
    for(;;) {
       data = new uint8_t[length];
       fread(data, 1, length, file);
-      Frame *frame = new Frame(width, height, data);
+      stab->addFrame(data);
       delete [] data;
-      stabilize(lastFrame, frame);
-      delete lastFrame;
       draw( "stab", width, height
-          , frame->getOriginalImage(), frame->getStabilizedImage());
-      lastFrame = frame;
+          , stab->getOriginalImage(), stab->getStabilizedImage());
       if(waitKey(30) >= 0) break;
    }
-   delete lastFrame;
+   delete stab;
    return 0;
 }

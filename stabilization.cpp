@@ -62,8 +62,9 @@ using namespace cv;
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
 
-class FrameData {
+class Frame {
 public:
+   Frame(int width, int height, void* image);
    cv::Mat img;
    cv::Mat grayImg;
    cv::Mat stabImg;
@@ -75,24 +76,17 @@ public:
 };
 
 Frame::Frame(int width, int height, void* image) {
-   this->data = new FrameData();
-   Mat img = Mat(height,width,CV_8UC3,image);
-   this->data->img = img.clone();
-   this->data->stabImg = this->data->img.clone();
-   cvtColor(this->data->img,this->data->grayImg,CV_BGR2GRAY);
-   this->data->isEjected = false;
-   this->data->numOfStatic = 0;
-   this->data->transformToPrev = MATRIX_IDENTITY;
-   this->data->transformToOrig = MATRIX_IDENTITY;
+   Mat mimg = Mat(height,width,CV_8UC3,image);
+   img = mimg.clone();
+   stabImg = img.clone();
+   cvtColor(img,grayImg,CV_BGR2GRAY);
+   isEjected = false;
+   numOfStatic = 0;
+   transformToPrev = MATRIX_IDENTITY;
+   transformToOrig = MATRIX_IDENTITY;
 }
 
-Frame::~Frame() { delete data; }
-
-void* Frame::getStabilizedImage() { return this->data->stabImg.ptr(); }
-
-void* Frame::getOriginalImage() { return this->data->img.ptr(); }
-
-void findFeatures(FrameData* frame) {
+void findFeatures(Frame* frame) {
    if(frame->isEjected || frame->features.size() < 0.8*CORNERS_MAX_COUNT)
       goodFeaturesToTrack( frame->grayImg, frame->features
                          , CORNERS_MAX_COUNT, CORNERS_QUALITY, CORNERS_MIN_DISTANCE
@@ -107,7 +101,7 @@ void findFeatures(FrameData* frame) {
    //}
 }
 
-Mat findTransform(FrameData* last_frame, FrameData* frame, vector<uchar> status) {
+Mat findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
    if(last_frame->features.size() != frame->features.size()) { return MATRIX_IDENTITY; }
    for(int i = 0; i < status.size(); i++) {
       if(!status[i]) {
@@ -145,7 +139,7 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 }
 
 //What numOfStatic is supposed to mean?
-void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
+void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
    if(checkEjection(transf_vals)) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
    if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
@@ -199,21 +193,65 @@ void estimateTransform(FrameData* frame, FrameData* lastFrame, Mat& transform) {
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
-   FrameData* frameData = frame->data;
-   FrameData* lastFrameData = lastFrame->data;
-   findFeatures(lastFrameData);
+   //Frame* frameData = frame->data;
+   //Frame* lastFrame = lastFrame->data;
+   findFeatures(lastFrame);
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
    // Optical flow by Lucas-Kanade
-   calcOpticalFlowPyrLK( lastFrameData->grayImg, frameData->grayImg
-                       , lastFrameData->features, frameData->features
+   calcOpticalFlowPyrLK( lastFrame->grayImg, frame->grayImg
+                       , lastFrame->features, frame->features
                        , statusFeatures, errFeatures, LK_WIN_SIZE, LK_MAX_LEVEL
                        , TermCriteria( TermCriteria::COUNT+TermCriteria::EPS
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
-   Mat transform = findTransform(lastFrameData, frameData, statusFeatures);
+   Mat transform = findTransform(lastFrame, frame, statusFeatures);
    // Refine transformation
-   estimateTransform(frameData, lastFrameData, transform);
+   estimateTransform(frame, lastFrame, transform);
    // Apply transformation
-   warpPerspective(frameData->img, frameData->stabImg, transform, frameData->img.size());
+   warpPerspective(frame->img, frame->stabImg, transform, frame->img.size());
 }
+
+class StabilizerData {
+public:
+   Frame* frame;
+   Frame* prevFrame;
+   int width;
+   int height;
+};
+
+Stabilizer::Stabilizer(int width, int height) {
+   data = new StabilizerData(); 
+   data->width = width;
+   data->height = height;
+}
+
+Stabilizer::~Stabilizer() {
+   if(data->frame) delete data->frame;
+   if(data->prevFrame) delete data->prevFrame;
+   delete data;
+}
+
+int Stabilizer::addFrame(void* image, int width, int height) {
+   if(width != -1) {
+      if(data->width == -1) data->width = width;
+      else if(data->width != width) return -1;
+   } else if(data->width == -1) return -1;
+   if(height != -1) {
+      if(data->height == -1) data->height = height;
+      else if(data->height != height) return -1;
+   } else if(data->height == -1) return -1;
+   Frame* frame = new Frame(data->width, data->height, image);
+   if(!data->frame) data->frame = frame;
+   else {
+      delete data->prevFrame;
+      data->prevFrame = data->frame;
+      data->frame = frame;
+      stabilize(data->prevFrame, data->frame);
+   }
+   return 0;
+}
+
+void* Stabilizer::getStabilizedImage() { return this->data->frame->stabImg.ptr(); }
+
+void* Stabilizer::getOriginalImage() { return this->data->frame->img.ptr(); }
