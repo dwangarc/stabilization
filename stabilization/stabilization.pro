@@ -22,3 +22,13 @@ win32:LIBS+= -L../opencv/lib -lopencv_calib3d241 -lopencv_core241 -lopencv_highg
 win32:INCLUDEPATH += ../opencv/include
 
 unix:LIBS+=-lopencv_calib3d -lopencv_core -lopencv_highgui -lopencv_video -lopencv_imgproc
+
+unix {
+   isEmpty(PREFIX) {
+      PREFIX=/usr/local/
+   }
+   target.path = $$PREFIX/lib
+   headers.files = stabilization.h
+   headers.path = $$PREFIX/include
+   INSTALLS += headers target
+}
