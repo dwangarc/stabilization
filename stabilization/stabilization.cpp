@@ -159,16 +159,16 @@ void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    //cout << "original -> stab dist: " << orig_stab_dist << endl;
    //cout << "numOfStatic on start: " << frame.numOfStatic << endl;
 
-   if(orig_stab_dist < 1) {
-      if(frame->numOfStatic - 2 > OPTIMISTIC_K)
+   if(orig_stab_dist <= 1) {
+      if(frame->numOfStatic > OPTIMISTIC_K + 2)
          transform = stab_transf_vals * 0.8 + MATRIX_IDENTITY;
       else
          transform = orig_stab_tr;
    } else {
       if(lastFrame->numOfStatic > OPTIMISTIC_K) {
          double func_val = pow(log(orig_stab_dist)+1, -1. / OPTIMAL_DIST);
-         transform = stab_transf_vals * func_val + MATRIX_IDENTITY;
-         frame->transformToPrev = stab_transf_vals * (1 - func_val) + MATRIX_IDENTITY;
+         transform = func_val * stab_transf_vals + MATRIX_IDENTITY;
+         frame->transformToPrev = orig_stab_tr - transform + MATRIX_IDENTITY;
       } else {
          frame->numOfStatic = lastFrame->numOfStatic + 1;
          transform = stab_transf_vals * 0.9 + MATRIX_IDENTITY;
