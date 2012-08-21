@@ -154,40 +154,27 @@ void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    
    double orig_stab_dist = calcDistanceTo( stab_transf_vals
                                          , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
-   double func_val = 1;
-   if(orig_stab_dist > 1)
-      func_val = 1. / pow(log(orig_stab_dist)+1, 1. / OPTIMAL_DIST);
-
-   Mat opt_stab_tr = stab_transf_vals * func_val + MATRIX_IDENTITY;
-   Mat stab_stab_tr = stab_transf_vals * (1 - func_val) + MATRIX_IDENTITY;
 
    //cout << "original dist: " << orig_dist << endl;
    //cout << "original -> stab dist: " << orig_stab_dist << endl;
    //cout << "numOfStatic on start: " << frame.numOfStatic << endl;
 
    if(orig_stab_dist < 1) {
-      if(frame->numOfStatic - 2 > OPTIMISTIC_K) {
-         //cout << "transform is stab_transf_vals" << endl;
+      if(frame->numOfStatic - 2 > OPTIMISTIC_K)
          transform = stab_transf_vals * 0.8 + MATRIX_IDENTITY;
-      }
-      else {
-         //cout << "transform is orig_stab_tr" << endl;
+      else
          transform = orig_stab_tr;
-      }
-      frame->transformToOrig = transform;
    } else {
       if(lastFrame->numOfStatic > OPTIMISTIC_K) {
-         frame->transformToOrig = opt_stab_tr;
-         frame->transformToPrev = stab_stab_tr;
-         //cout << "transform is opt_stab_tr" << endl;
-         transform = opt_stab_tr;
+         double func_val = pow(log(orig_stab_dist)+1, -1. / OPTIMAL_DIST);
+         transform = stab_transf_vals * func_val + MATRIX_IDENTITY;
+         frame->transformToPrev = stab_transf_vals * (1 - func_val) + MATRIX_IDENTITY;
       } else {
          frame->numOfStatic = lastFrame->numOfStatic + 1;
-         //cout << "transform is stab_tranf_vals(2)" << endl;
          transform = stab_transf_vals * 0.9 + MATRIX_IDENTITY;
-         frame->transformToOrig = transform;
       }
    }
+   frame->transformToOrig = transform;
    //cout << "numOfStatic: " << frame.numOfStatic << endl;
    return;
 }
