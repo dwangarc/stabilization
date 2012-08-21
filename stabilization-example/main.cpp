@@ -20,25 +20,33 @@ void draw(char* windowName, int width, int height, void* img1, void* img2) {
 
 int main(int argc, char *argv[]) {
    //Must be rawvideo 640x480 with BGR3 pixels
-   FILE* file = fopen("out.video", "rb");
-   uint8_t* data;
-   int width = 640;
-   int height = 480;
+   //FILE* file = fopen("out.video", "rb");
+   VideoCapture cap(1);
+   Mat frame;
+   //uint8_t* data;
+   //int width = 640;
+   //int height = 480;
+   int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+   int height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
    int length = 3*width*height;
 
    Stabilizer *stab = new Stabilizer(width,height);
 
-   data = new uint8_t[length];
-   fread(data, 1, length, file);
-   stab->addFrame(data);
-   delete [] data;
+   //data = new uint8_t[length];
+   //fread(data, 1, length, file);
+   //stab->addFrame(data);
+   cap >> frame;
+   stab->addFrame(frame.ptr());
+   //delete [] data;
 
    namedWindow("stab",1);
    for(;;) {
-      data = new uint8_t[length];
-      fread(data, 1, length, file);
-      stab->addFrame(data);
-      delete [] data;
+      //data = new uint8_t[length];
+      //fread(data, 1, length, file);
+      //stab->addFrame(data);
+      cap >> frame;
+      stab->addFrame(frame.ptr());
+      //delete [] data;
       draw( "stab", width, height
           , stab->getOriginalImage(), stab->getStabilizedImage());
       if(waitKey(30) >= 0) break;
