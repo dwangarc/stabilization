@@ -71,8 +71,7 @@ public:
    std::vector<cv::Point2f> features;
    bool isEjected;
    int numOfStatic;
-   cv::Mat transformToPrev;
-   cv::Mat transformToOrig;
+   cv::Mat transform;
 };
 
 Frame::Frame(int width, int height, void* image) {
@@ -82,8 +81,7 @@ Frame::Frame(int width, int height, void* image) {
    cvtColor(img,grayImg,CV_BGR2GRAY);
    isEjected = false;
    numOfStatic = 0;
-   transformToPrev = MATRIX_IDENTITY;
-   transformToOrig = MATRIX_IDENTITY;
+   transform = MATRIX_IDENTITY;
 }
 
 void findFeatures(Frame* frame) {
@@ -142,16 +140,15 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
    if(checkEjection(transf_vals)) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
+   Mat orig_stab_tr = lastFrame->transform;
    if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
       frame->numOfStatic = lastFrame->numOfStatic + 1;
-   else
-      frame->transformToPrev = transform;
+   else orig_stab_tr = transform * orig_stab_tr;
 
-   //double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
-   Mat orig_stab_tr = frame->transformToPrev * lastFrame->transformToOrig;
    Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
    if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
    
+   //double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
    double orig_stab_dist = calcDistanceTo( stab_transf_vals
                                          , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
 
@@ -161,20 +158,19 @@ void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
 
    if(orig_stab_dist <= 1) {
       if(frame->numOfStatic > OPTIMISTIC_K + 2)
-         transform = stab_transf_vals * 0.8 + MATRIX_IDENTITY;
+         transform = 0.8 * orig_stab_tr + 0.2 * MATRIX_IDENTITY;
       else
          transform = orig_stab_tr;
    } else {
       if(lastFrame->numOfStatic > OPTIMISTIC_K) {
-         double func_val = pow(log(orig_stab_dist)+1, -1. / OPTIMAL_DIST);
-         transform = func_val * stab_transf_vals + MATRIX_IDENTITY;
-         frame->transformToPrev = orig_stab_tr - transform + MATRIX_IDENTITY;
+         double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
+         transform = func_val * orig_stab_tr + (1-func_val) * MATRIX_IDENTITY;
       } else {
          frame->numOfStatic = lastFrame->numOfStatic + 1;
-         transform = stab_transf_vals * 0.9 + MATRIX_IDENTITY;
+         transform = 0.9 * orig_stab_tr + 0.1 * MATRIX_IDENTITY;
       }
    }
-   frame->transformToOrig = transform;
+   frame->transform = transform;
    //cout << "numOfStatic: " << frame.numOfStatic << endl;
    return;
 }
