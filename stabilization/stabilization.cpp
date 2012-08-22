@@ -96,9 +96,9 @@ void findFeatures(Frame* frame) {
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
    // Draw circles around detected features.
-   //for(int i = 0; i < frame->features.size(); i++) {
-   //   circle(frame->img,frame->features[i],10,-1);
-   //}
+   for(int i = 0; i < frame->features.size(); i++) {
+      circle(frame->img,frame->features[i],10,-1);
+   }
 }
 
 Mat findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
