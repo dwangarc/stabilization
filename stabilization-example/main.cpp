@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
    //FILE* file = fopen("out.video", "rb");
    VideoCapture cap(1);
    Mat frame;
+   void *lastFrame;
    //uint8_t* data;
    //int width = 640;
    //int height = 480;
@@ -45,10 +46,10 @@ int main(int argc, char *argv[]) {
       //fread(data, 1, length, file);
       //stab->addFrame(data);
       cap >> frame;
+      lastFrame = stab->getOriginalImage();
       stab->addFrame(frame.ptr());
       //delete [] data;
-      draw( "stab", width, height
-          , stab->getOriginalImage(), stab->getStabilizedImage());
+      draw( "stab", width, height, lastFrame, stab->getStabilizedImage());
       if(waitKey(30) >= 0) break;
    }
    delete stab;
