@@ -94,10 +94,6 @@ void findFeatures(Frame* frame) {
    cornerSubPix(frame->grayImg, frame->features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
-   // Draw circles around detected features.
-   for(uint i = 0; i < frame->features.size(); i++) {
-      circle(frame->img,frame->features[i],10,-1);
-   }
 }
 
 void findTransform(Frame* lastFrame, Frame* frame) {
@@ -179,6 +175,10 @@ void stabilize(Frame* lastFrame, Frame* frame) {
    refineTransform(lastFrame, frame);
    // Apply transformation
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
+   // Draw circles around detected features.
+   for(uint i = 0; i < frame->features.size(); i++) {
+      circle(frame->img,frame->features[i],10,-1);
+   }
 }
 
 class StabilizerData {
