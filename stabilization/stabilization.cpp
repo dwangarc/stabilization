@@ -50,12 +50,12 @@ using namespace cv;
 #define OPTIMISTIC_K 3
 #define OPTIMAL_DIST 2
 #define MIN_DIST 0.5
-#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.0009, 0.0005, 0.09\
-                                        , 0.0005, 1.0009, 0.09\
-                                        , 0.0001, 0.0001, 1.00))
-#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 1.0, 0.7, 50\
-                                        , 0.7, 1.0, 50\
-                                        , 1.0, 1.0, 1.))
+#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 2.0009, 0.0005, 0.09\
+                                        , 0.0005, 2.0009, 0.09\
+                                        , 0.0001, 0.0001, 2.00))
+#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 50\
+                                        , 0.7, 2.0, 50\
+                                        , 1.0, 1.0, 2.))
 //Stabilization not required if all elements are respectively greater
 //then in our transformation matrix
 #define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
@@ -130,23 +130,22 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
    Mat orig_stab_tr = lastFrame->transform;
-   if(calcDistanceTo(transf_vals, MATRIX_MAX_TRANSFORM) > 1) {
+   if(calcDistanceTo(transform, MATRIX_MAX_TRANSFORM) > 1) {
       frame->isEjected = true;
       transform = MATRIX_IDENTITY;
       return;
-   } else if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
+   } else if(calcDistanceTo(transform, MATRIX_MIN_TRANSFORM) < 1)
       frame->numOfStatic = lastFrame->numOfStatic + 1;
    else
       orig_stab_tr = transform * orig_stab_tr;
 
-   Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
-   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) {
-      frame->isEjected = true;
+   if(calcDistanceTo(orig_stab_tr, MATRIX_MIN_TRANSFORM) < 1) {
       transform = MATRIX_IDENTITY;
       return;
    }
    
-   double orig_stab_dist = calcDistanceTo(stab_transf_vals, MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
+   double orig_stab_dist = calcDistanceTo( orig_stab_tr - MATRIX_IDENTITY
+                                         , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
 
    if(orig_stab_dist <= 1) {
       if(frame->numOfStatic > OPTIMISTIC_K + 2)
