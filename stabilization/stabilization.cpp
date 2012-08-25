@@ -99,8 +99,9 @@ void findFeatures(Frame* frame) {
    }
 }
 
-Mat findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
-   if(last_frame->features.size() != frame->features.size()) { return MATRIX_IDENTITY; }
+void findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
+   frame->transform = MATRIX_IDENTITY;
+   if(last_frame->features.size() != frame->features.size()) return;
    for(int i = 0; i < status.size(); i++) {
       if(!status[i]) {
          frame->features.erase(frame->features.begin()+i);
@@ -109,9 +110,9 @@ Mat findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
          i--;
       }
    }
-   if(status.size() < 4) { return MATRIX_IDENTITY; }
+   if(status.size() < 4) return;
    // For some reason arguments should be reversed to what documentation says.
-   return findHomography(frame->features, last_frame->features, CV_RANSAC);
+   frame->transform = findHomography(frame->features, last_frame->features, CV_RANSAC);
 }
 
 //Why is it called such?
@@ -127,20 +128,19 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 }
 
 //What numOfStatic is supposed to mean?
-void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
-   Mat transf_vals = transform - MATRIX_IDENTITY;
+void estimateTransform(Frame* lastFrame, Frame* frame) {
    Mat orig_stab_tr = lastFrame->transform;
-   if(calcDistanceTo(transform, MATRIX_MAX_TRANSFORM) > 1) {
+   if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
       frame->isEjected = true;
-      transform = MATRIX_IDENTITY;
+      frame->transform = MATRIX_IDENTITY;
       return;
-   } else if(calcDistanceTo(transform, MATRIX_MIN_TRANSFORM) < 1)
+   } else if(calcDistanceTo(frame->transform, MATRIX_MIN_TRANSFORM) < 1)
       frame->numOfStatic = lastFrame->numOfStatic + 1;
    else
-      orig_stab_tr = transform * orig_stab_tr;
+      orig_stab_tr = frame_>transform * orig_stab_tr;
 
    if(calcDistanceTo(orig_stab_tr, MATRIX_MIN_TRANSFORM) < 1) {
-      transform = MATRIX_IDENTITY;
+      frame->transform = MATRIX_IDENTITY;
       return;
    }
    
@@ -149,18 +149,17 @@ void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
 
    if(orig_stab_dist <= 1) {
       if(frame->numOfStatic > OPTIMISTIC_K + 2)
-         transform = 0.8 * orig_stab_tr + 0.2 * MATRIX_IDENTITY;
-      else transform = orig_stab_tr;
+         frame->transform = 0.8 * orig_stab_tr + 0.2 * MATRIX_IDENTITY;
+      else frame->transform = orig_stab_tr;
    } else {
       if(lastFrame->numOfStatic > OPTIMISTIC_K) {
          double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
-         transform = func_val * orig_stab_tr + (1-func_val) * MATRIX_IDENTITY;
+         frame->transform = func_val * orig_stab_tr + (1-func_val) * MATRIX_IDENTITY;
       } else {
          frame->numOfStatic = lastFrame->numOfStatic + 1;
-         transform = 0.9 * orig_stab_tr + 0.1 * MATRIX_IDENTITY;
+         frame->transform = 0.9 * orig_stab_tr + 0.1 * MATRIX_IDENTITY;
       }
    }
-   frame->transform = transform;
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
@@ -176,11 +175,11 @@ void stabilize(Frame* lastFrame, Frame* frame) {
                        , TermCriteria( TermCriteria::COUNT+TermCriteria::EPS
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
-   Mat transform = findTransform(lastFrame, frame, statusFeatures);
+   findTransform(lastFrame, frame, statusFeatures);
    // Refine transformation
-   estimateTransform(frame, lastFrame, transform);
+   estimateTransform(lastFrame, frame);
    // Apply transformation
-   warpPerspective(frame->img, frame->stabImg, transform, frame->img.size());
+   warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
 }
 
 class StabilizerData {
