@@ -114,16 +114,6 @@ Mat findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
    return findHomography(frame->features, last_frame->features, CV_RANSAC);
 }
 
-bool checkEjection(Mat transform) {
-   for(int i = 0; i < 3; i++)
-      for(int j = 0; j < 3; j++)
-         if(abs(transform.at<double>(i,j)) > MATRIX_MAX_TRANSFORM.at<double>(i,j)) {
-            cout << "Ejection" << endl;
-            return true;
-         }
-   return false;
-}
-
 //Why is it called such?
 double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
    double dist, max_dist;
@@ -139,28 +129,29 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 //What numOfStatic is supposed to mean?
 void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
    Mat transf_vals = transform - MATRIX_IDENTITY;
-   if(checkEjection(transf_vals)) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
    Mat orig_stab_tr = lastFrame->transform;
-   if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
+   if(calcDistanceTo(transf_vals, MATRIX_MAX_TRANSFORM) > 1) {
+      frame->isEjected = true;
+      transform = MATRIX_IDENTITY;
+      return;
+   } else if(calcDistanceTo(transf_vals, MATRIX_MIN_TRANSFORM) < 1)
       frame->numOfStatic = lastFrame->numOfStatic + 1;
-   else orig_stab_tr = transform * orig_stab_tr;
+   else
+      orig_stab_tr = transform * orig_stab_tr;
 
    Mat stab_transf_vals = orig_stab_tr - MATRIX_IDENTITY;
-   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) { frame->isEjected = true; transform = MATRIX_IDENTITY; return; }
+   if(calcDistanceTo(stab_transf_vals, MATRIX_MIN_TRANSFORM) < 1) {
+      frame->isEjected = true;
+      transform = MATRIX_IDENTITY;
+      return;
+   }
    
-   //double orig_dist = calcDistanceTo(transf_vals, MATRIX_MAX_NORMAL_TRANSFORM);
-   double orig_stab_dist = calcDistanceTo( stab_transf_vals
-                                         , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
-
-   //cout << "original dist: " << orig_dist << endl;
-   //cout << "original -> stab dist: " << orig_stab_dist << endl;
-   //cout << "numOfStatic on start: " << frame.numOfStatic << endl;
+   double orig_stab_dist = calcDistanceTo(stab_transf_vals, MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
 
    if(orig_stab_dist <= 1) {
       if(frame->numOfStatic > OPTIMISTIC_K + 2)
          transform = 0.8 * orig_stab_tr + 0.2 * MATRIX_IDENTITY;
-      else
-         transform = orig_stab_tr;
+      else transform = orig_stab_tr;
    } else {
       if(lastFrame->numOfStatic > OPTIMISTIC_K) {
          double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
@@ -171,8 +162,6 @@ void estimateTransform(Frame* frame, Frame* lastFrame, Mat& transform) {
       }
    }
    frame->transform = transform;
-   //cout << "numOfStatic: " << frame.numOfStatic << endl;
-   return;
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
