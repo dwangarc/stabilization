@@ -99,20 +99,29 @@ void findFeatures(Frame* frame) {
    }
 }
 
-void findTransform(Frame* last_frame, Frame* frame, vector<uchar> status) {
+void findTransform(Frame* lastFrame, Frame* frame) {
    frame->transform = MATRIX_IDENTITY;
-   if(last_frame->features.size() != frame->features.size()) return;
-   for(int i = 0; i < status.size(); i++) {
-      if(!status[i]) {
+   vector<float> errFeatures;
+   vector<uchar> statusFeatures;
+   // Optical flow by Lucas-Kanade
+   calcOpticalFlowPyrLK( lastFrame->grayImg, frame->grayImg
+                       , lastFrame->features, frame->features
+                       , statusFeatures, errFeatures, LK_WIN_SIZE, LK_MAX_LEVEL
+                       , TermCriteria( TermCriteria::COUNT+TermCriteria::EPS
+                                     , LK_ITER_COUNT, LK_ITER_EPS)
+                       , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
+   if(lastFrame->features.size() != frame->features.size()) return;
+   for(int i = 0; i < statusFeatures.size(); i++) {
+      if(!statusFeatures[i]) {
          frame->features.erase(frame->features.begin()+i);
-         last_frame->features.erase(last_frame->features.begin()+i);
-         status.erase(status.begin()+i);
+         lastFrame->features.erase(lastFrame->features.begin()+i);
+         statusFeatures.erase(status.begin()+i);
          i--;
       }
    }
-   if(status.size() < 4) return;
+   if(statusFeatures.size() < 4) return;
    // For some reason arguments should be reversed to what documentation says.
-   frame->transform = findHomography(frame->features, last_frame->features, CV_RANSAC);
+   frame->transform = findHomography(frame->features, lastFrame->features, CV_RANSAC);
 }
 
 //Why is it called such?
@@ -163,19 +172,8 @@ void estimateTransform(Frame* lastFrame, Frame* frame) {
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
-   //Frame* frameData = frame->data;
-   //Frame* lastFrame = lastFrame->data;
    findFeatures(lastFrame);
-   vector<float> errFeatures;
-   vector<uchar> statusFeatures;
-   // Optical flow by Lucas-Kanade
-   calcOpticalFlowPyrLK( lastFrame->grayImg, frame->grayImg
-                       , lastFrame->features, frame->features
-                       , statusFeatures, errFeatures, LK_WIN_SIZE, LK_MAX_LEVEL
-                       , TermCriteria( TermCriteria::COUNT+TermCriteria::EPS
-                                     , LK_ITER_COUNT, LK_ITER_EPS)
-                       , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
-   findTransform(lastFrame, frame, statusFeatures);
+   findTransform(lastFrame, frame);
    // Refine transformation
    estimateTransform(lastFrame, frame);
    // Apply transformation
