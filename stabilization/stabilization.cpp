@@ -90,17 +90,19 @@ void findFeatures(Frame* frame) {
                          , CORNERS_MAX_COUNT, CORNERS_QUALITY, CORNERS_MIN_DISTANCE
                          , CORNERS_MASK, CORNERS_BLOCK_SIZE, CORNERS_USE_HARRIS
                          , CORNERS_HARRIS_PARAM);
+   if(frame->features.size() == 0) return;
    cornerSubPix(frame->grayImg, frame->features, CORNERS_WIN_SIZE, CORNERS_DEAD_SIZE
                , TermCriteria(TermCriteria::COUNT+TermCriteria::EPS
                              ,CORNERS_ITER_COUNT, CORNERS_ITER_EPS));
    // Draw circles around detected features.
-   for(int i = 0; i < frame->features.size(); i++) {
+   for(uint i = 0; i < frame->features.size(); i++) {
       circle(frame->img,frame->features[i],10,-1);
    }
 }
 
 void findTransform(Frame* lastFrame, Frame* frame) {
    frame->transform = MATRIX_IDENTITY;
+   if(lastFrame->features.size() == 0) return;
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
    // Optical flow by Lucas-Kanade
@@ -111,11 +113,11 @@ void findTransform(Frame* lastFrame, Frame* frame) {
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
    if(lastFrame->features.size() != frame->features.size()) return;
-   for(int i = 0; i < statusFeatures.size(); i++) {
+   for(uint i = 0; i < statusFeatures.size(); i++) {
       if(!statusFeatures[i]) {
          frame->features.erase(frame->features.begin()+i);
          lastFrame->features.erase(lastFrame->features.begin()+i);
-         statusFeatures.erase(status.begin()+i);
+         statusFeatures.erase(statusFeatures.begin()+i);
          i--;
       }
    }
@@ -126,7 +128,7 @@ void findTransform(Frame* lastFrame, Frame* frame) {
 
 //Why is it called such?
 double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
-   double dist, max_dist;
+   double dist, max_dist = 0;
    for(int i = 0; i < 3; i++)
       for(int j = 0; j < 3; j++) {
          //Should there be another abs?
@@ -137,7 +139,7 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 }
 
 //What numOfStatic is supposed to mean?
-void estimateTransform(Frame* lastFrame, Frame* frame) {
+void refineTransform(Frame* lastFrame, Frame* frame) {
    Mat orig_stab_tr = lastFrame->transform;
    if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
       frame->isEjected = true;
@@ -146,7 +148,7 @@ void estimateTransform(Frame* lastFrame, Frame* frame) {
    } else if(calcDistanceTo(frame->transform, MATRIX_MIN_TRANSFORM) < 1)
       frame->numOfStatic = lastFrame->numOfStatic + 1;
    else
-      orig_stab_tr = frame_>transform * orig_stab_tr;
+      orig_stab_tr = frame->transform * orig_stab_tr;
 
    if(calcDistanceTo(orig_stab_tr, MATRIX_MIN_TRANSFORM) < 1) {
       frame->transform = MATRIX_IDENTITY;
@@ -174,8 +176,7 @@ void estimateTransform(Frame* lastFrame, Frame* frame) {
 void stabilize(Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
-   // Refine transformation
-   estimateTransform(lastFrame, frame);
+   refineTransform(lastFrame, frame);
    // Apply transformation
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
 }
