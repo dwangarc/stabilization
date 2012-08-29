@@ -48,7 +48,7 @@ using namespace cv;
 //Transform estimation(refinement?)
 //
 #define MIN_SIN 0.01
-#define MAX_SIN 1.
+#define MAX_SIN 0.1
 #define MIN_SCALE 1.01
 #define MAX_SCALE 1.5
 #define MIN_TRANS 0.1
@@ -147,8 +147,15 @@ void refineTransform(Frame* lastFrame, Frame* frame) {
    double ty = frame->transform.at<double>(1,2);
    double skewX = frame->transform.at<double>(2,0);
    double skewY = frame->transform.at<double>(2,1);
-   cout << endl;
-   cout << "Want sin(theta)=" << stheta << "\nscale=" << scale << "\nt=" << tx << "," << ty << "\nskew=" << skewX << "," << skewY << endl;
+   if(stheta > MAX_SIN || stheta < MIN_SIN) stheta = 0;
+   else cout << "sin OK" << endl;
+   if( scale < 1 && (1/scale > MAX_SCALE || 1/scale < MIN_SCALE)
+     || scale >= 1 && (scale > MAX_SCALE || scale < MIN_SCALE)) scale = 1;
+   else cout << "scale OK" << endl;
+   if(tx > MAX_TRANS || tx < MIN_TRANS || ty > MAX_TRANS || ty < MIN_TRANS);
+   else cout << "trans OK" << endl;
+   //cout << endl;
+   //cout << "Want sin(theta)=" << stheta << "\nscale=" << scale << "\nt=" << tx << "," << ty << "\nskew=" << skewX << "," << skewY << endl;
    Mat orig_stab_tr = lastFrame->transform;
    //Mat orig_stab_tr = MATRIX_IDENTITY;
    if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
