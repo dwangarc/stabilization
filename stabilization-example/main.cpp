@@ -21,7 +21,11 @@ void draw(char* windowName, int width, int height, void* img1, void* img2) {
 int main(int argc, char *argv[]) {
    //Must be rawvideo 640x480 with BGR3 pixels
    //FILE* file = fopen("out.video", "rb");
-   VideoCapture cap(1);
+   VideoCapture cap;
+   if(argc == 1)
+      cap = VideoCapture(1);
+   else
+      cap = VideoCapture(argv[1]);
    Mat frame;
    //uint8_t* data;
    //int width = 640;
