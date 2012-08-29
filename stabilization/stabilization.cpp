@@ -139,7 +139,7 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 }
 
 //What numOfStatic is supposed to mean?
-void refineTransform(Frame* lastFrame, Frame* frame) {
+void refineTransform1(Frame* lastFrame, Frame* frame) {
    //a01, a10 must be less then 1 and bigger than 0.1
    double stheta = (frame->transform.at<double>(1,0)-frame->transform.at<double>(0,1))/2;
    double scale = (frame->transform.at<double>(0,0)+frame->transform.at<double>(1,1))/sqrt(1-stheta*stheta)/2;
@@ -148,12 +148,14 @@ void refineTransform(Frame* lastFrame, Frame* frame) {
    double skewX = frame->transform.at<double>(2,0);
    double skewY = frame->transform.at<double>(2,1);
    if(stheta > MAX_SIN || stheta < MIN_SIN) stheta = 0;
-   else cout << "sin OK" << endl;
    if( scale < 1 && (1/scale > MAX_SCALE || 1/scale < MIN_SCALE)
      || scale >= 1 && (scale > MAX_SCALE || scale < MIN_SCALE)) scale = 1;
-   else cout << "scale OK" << endl;
-   if(tx > MAX_TRANS || tx < MIN_TRANS || ty > MAX_TRANS || ty < MIN_TRANS);
-   else cout << "trans OK" << endl;
+   if(tx > MAX_TRANS || tx < MIN_TRANS) tx = 0;
+   if(ty > MAX_TRANS || ty < MIN_TRANS) ty = 0;;
+   double ctheta = sqrt(1-stheta*stheta);
+   double m[3][3] = {{scale*ctheta,-stheta,tx},{stheta,scale*ctheta,ty},{0,0,1}};
+   frame->transform = Mat(3,3,CV_64F, m);
+   cout << "Want transform: " << frame->transform << endl;
    //cout << endl;
    //cout << "Want sin(theta)=" << stheta << "\nscale=" << scale << "\nt=" << tx << "," << ty << "\nskew=" << skewX << "," << skewY << endl;
    Mat orig_stab_tr = lastFrame->transform;
@@ -205,10 +207,20 @@ void refineTransform(Frame* lastFrame, Frame* frame) {
    //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
-void stabilize(Frame* lastFrame, Frame* frame) {
+void refineTransform(KalmanFilter* kalman, Frame* frame) {
+   cout << endl << "Before: " << frame->transform << endl;
+   kalman->predict(); 
+   Mat transform = kalman->correct(frame->transform.reshape(0,9));
+   frame->transform = transform.reshape(0,6);
+   frame->transform.resize(3);
+   cout << "After: " << frame->transform << endl;
+}
+
+void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
-   refineTransform(lastFrame, frame);
+   //refineTransform(lastFrame, frame);
+   refineTransform(kalman, frame);
    // Apply transformation
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
    // Draw circles around detected features.
@@ -223,17 +235,42 @@ public:
    Frame* prevFrame;
    int width;
    int height;
+   KalmanFilter* kalman;
 };
 
 Stabilizer::Stabilizer(int width, int height) {
    data = new StabilizerData(); 
    data->width = width;
    data->height = height;
+   KalmanFilter* kf = new KalmanFilter(18,9,0,CV_64F);
+   Mat trans(18,18,CV_64F);
+   for(int i=0;i<18;i++) { trans.at<double>(i,i) = 1; if(i<9) trans.at<double>(i,i+9)=1; }
+   Mat processNoise = (Mat_<double>(1,18) << 1e-4, 1e-4, 1e-4
+                                           , 1e-4, 1e-4, 1e-4
+                                           , 1e-4, 1e-4, 1e-4
+                                           , 1e-7, 1e-7, 1e-7
+                                           , 1e-7, 1e-7, 1e-7
+                                           , 1e-7, 1e-7, 1e-7);
+   Mat measurementNoise = (Mat_<double>(1,9) << 1e-3, 1e-3, 1e-3
+                                              , 1e-3, 1e-3, 1e-3
+                                              , 1e-3, 1e-3, 1e-8);
+   kf->transitionMatrix = trans;
+   setIdentity(kf->measurementMatrix);
+   setIdentity(kf->processNoiseCov);
+   kf->statePost = (Mat_<double>(18,1) << 1,0,0,0,1,0,0,0,1
+                                         ,0,0,0,0,0,0,0,0,0);
+   for(int i=0;i<18;i++) { kf->processNoiseCov.at<double>(i,i) = processNoise.at<double>(i); }
+   cout << kf->processNoiseCov << endl;
+   setIdentity(kf->measurementNoiseCov);
+   for(int i=0;i<9;i++) { kf->measurementNoiseCov.at<double>(i,i) = measurementNoise.at<double>(i); }
+   cout << kf->measurementNoiseCov << endl;
+   data->kalman = kf;
 }
 
 Stabilizer::~Stabilizer() {
    if(data->frame) delete data->frame;
    if(data->prevFrame) delete data->prevFrame;
+   if(data->kalman) delete data->kalman;
    delete data;
 }
 
@@ -252,7 +289,7 @@ int Stabilizer::addFrame(void* image, int width, int height) {
       delete data->prevFrame;
       data->prevFrame = data->frame;
       data->frame = frame;
-      stabilize(data->prevFrame, data->frame);
+      stabilize(data->kalman, data->prevFrame, data->frame);
    }
    return 0;
 }
