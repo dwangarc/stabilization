@@ -47,17 +47,21 @@ using namespace cv;
 //
 //Transform estimation(refinement?)
 //
-#define OPTIMISTIC_K 3
+#define MIN_SIN 0.01
+#define MAX_SIN 1.
+#define MIN_SCALE 1.01
+#define MAX_SCALE 1.5
+#define MIN_TRANS 0.1
+#define MAX_TRANS 10
+
+#define OPTIMISTIC_K 1
 #define OPTIMAL_DIST 2
-#define MIN_DIST 0.5
-#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 2.0009, 0.0005, 0.09\
-                                        , 0.0005, 2.0009, 0.09\
-                                        , 0.0001, 0.0001, 2.00))
-#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 50\
-                                        , 0.7, 2.0, 50\
-                                        , 1.0, 1.0, 2.))
-//Stabilization not required if all elements are respectively greater
-//then in our transformation matrix
+#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.10, 1e-2, 0.1\
+                                        , 1e-2, 1.10, 0.1\
+                                        , 1e-5, 1e-5, 1.1))
+#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 1.5, 1.0, 10\
+                                        , 1.0, 1.5, 10\
+                                        , 1.0, 1.0, 1.))
 #define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
@@ -136,37 +140,62 @@ double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
 
 //What numOfStatic is supposed to mean?
 void refineTransform(Frame* lastFrame, Frame* frame) {
+   //a01, a10 must be less then 1 and bigger than 0.1
+   double stheta = (frame->transform.at<double>(1,0)-frame->transform.at<double>(0,1))/2;
+   double scale = (frame->transform.at<double>(0,0)+frame->transform.at<double>(1,1))/sqrt(1-stheta*stheta)/2;
+   double tx = frame->transform.at<double>(0,2);
+   double ty = frame->transform.at<double>(1,2);
+   double skewX = frame->transform.at<double>(2,0);
+   double skewY = frame->transform.at<double>(2,1);
+   cout << endl;
+   cout << "Want sin(theta)=" << stheta << "\nscale=" << scale << "\nt=" << tx << "," << ty << "\nskew=" << skewX << "," << skewY << endl;
    Mat orig_stab_tr = lastFrame->transform;
+   //Mat orig_stab_tr = MATRIX_IDENTITY;
    if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
+      //cout << "Transformation is too strong. Assuming identity" << endl;
       frame->isEjected = true;
       frame->transform = MATRIX_IDENTITY;
       return;
-   } else if(calcDistanceTo(frame->transform, MATRIX_MIN_TRANSFORM) < 1)
+   } else if(calcDistanceTo(frame->transform, MATRIX_MIN_TRANSFORM) <= 1) {
+      //cout << "Transformation is too week. Using previous" << endl; 
       frame->numOfStatic = lastFrame->numOfStatic + 1;
-   else
+   } else {
+      //cout << "Transformation is OK. Using composition of current and previous" << endl;
       orig_stab_tr = frame->transform * orig_stab_tr;
+   }
 
    if(calcDistanceTo(orig_stab_tr, MATRIX_MIN_TRANSFORM) < 1) {
+      //cout << "New transformation is too week. Assuming identity." << endl;
       frame->transform = MATRIX_IDENTITY;
       return;
    }
    
-   double orig_stab_dist = calcDistanceTo( orig_stab_tr - MATRIX_IDENTITY
-                                         , MATRIX_MAX_NORMAL_TRANSFORM * MIN_DIST);
+   double orig_stab_dist = calcDistanceTo(orig_stab_tr, MATRIX_MAX_NORMAL_TRANSFORM);
 
+   double weight;
    if(orig_stab_dist <= 1) {
-      if(frame->numOfStatic > OPTIMISTIC_K + 2)
-         frame->transform = 0.8 * orig_stab_tr + 0.2 * MATRIX_IDENTITY;
-      else frame->transform = orig_stab_tr;
-   } else {
-      if(lastFrame->numOfStatic > OPTIMISTIC_K) {
-         double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
-         frame->transform = func_val * orig_stab_tr + (1-func_val) * MATRIX_IDENTITY;
+      //cout << "New transformation has not reached something" << endl;
+      if(frame->numOfStatic > OPTIMISTIC_K + 2) {
+         //cout << "New transformation has been applied to too many frames. Damping." << endl;
+         weight = 0.8;
       } else {
+         //cout << "New transformation is the best choice" << endl;
+         weight = 0.9;
+      }
+   } else {
+      //cout << "New transformation has reached something" << endl;
+      if(lastFrame->numOfStatic > OPTIMISTIC_K) {
+         //cout << "lastFrame->numOfStatic > OPTIMISTIC_K. Applying smart damping" << endl;
+         //double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
+         weight = 0.8;
+      } else {
+         //cout << "lastFrame->numOfStatic <= OPTIMISITIC_K. Still applying damping. And assuming frame static." << endl;
          frame->numOfStatic = lastFrame->numOfStatic + 1;
-         frame->transform = 0.9 * orig_stab_tr + 0.1 * MATRIX_IDENTITY;
+         weight = 0.9;
       }
    }
+   //frame->transform = weight * orig_stab_tr + (1-weight) * MATRIX_IDENTITY;
+   //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
 void stabilize(Frame* lastFrame, Frame* frame) {
