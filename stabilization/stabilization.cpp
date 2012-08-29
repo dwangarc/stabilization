@@ -207,12 +207,17 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
    //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
-void refineTransform(KalmanFilter* kalman, Frame* frame) {
+void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
+   //Now transform is between current frame and the trend - not current frame and last frame
+   //TODO: find the trend
+   Mat transform = frame->transform * lastFrame->transform;
    kalman->predict(); 
-   Mat transform = kalman->correct(frame->transform.reshape(0,9));
-   frame->transform = transform.reshape(0,6);
-   frame->transform.resize(3);
+   Mat refinedTransform = kalman->correct(transform.reshape(0,9));
+   transform = refinedTransform.reshape(0,6);
+   cout << "Velocity: " << transform.rowRange(3,5) << endl;
+   transform.resize(3);
+   frame->transform = transform;
    cout << "After: " << frame->transform << endl;
 }
 
@@ -220,7 +225,7 @@ void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
    //refineTransform(lastFrame, frame);
-   refineTransform(kalman, frame);
+   refineTransform(kalman, lastFrame, frame);
    // Apply transformation
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
    // Draw circles around detected features.
@@ -238,22 +243,19 @@ public:
    KalmanFilter* kalman;
 };
 
-Stabilizer::Stabilizer(int width, int height) {
-   data = new StabilizerData(); 
-   data->width = width;
-   data->height = height;
-   KalmanFilter* kf = new KalmanFilter(18,9,0,CV_64F);
+void setupKalman(KalmanFilter* kf) {
+   kf->init(18,9,0,CV_64F);
    Mat trans(18,18,CV_64F);
    for(int i=0;i<18;i++) { trans.at<double>(i,i) = 1; if(i<9) trans.at<double>(i,i+9)=1; }
-   Mat processNoise = (Mat_<double>(1,18) << 1e-4, 1e-4, 1e-4
-                                           , 1e-4, 1e-4, 1e-4
-                                           , 1e-4, 1e-4, 1e-4
-                                           , 1e-7, 1e-7, 1e-7
-                                           , 1e-7, 1e-7, 1e-7
-                                           , 1e-7, 1e-7, 1e-7);
+   Mat processNoise = (Mat_<double>(1,18) << 1e-5, 1e-5, 1e-5
+                                           , 1e-5, 1e-5, 1e-5
+                                           , 1e-5, 1e-5, 1e-5
+                                           , 1e-8, 1e-8, 1e-8
+                                           , 1e-8, 1e-8, 1e-8
+                                           , 1e-8, 1e-8, 1e-8);
    Mat measurementNoise = (Mat_<double>(1,9) << 1e-3, 1e-3, 1e-3
                                               , 1e-3, 1e-3, 1e-3
-                                              , 1e-3, 1e-3, 1e-8);
+                                              , 1e-3, 1e-3, 1e-3);
    kf->transitionMatrix = trans;
    setIdentity(kf->measurementMatrix);
    setIdentity(kf->processNoiseCov);
@@ -264,7 +266,14 @@ Stabilizer::Stabilizer(int width, int height) {
    setIdentity(kf->measurementNoiseCov);
    for(int i=0;i<9;i++) { kf->measurementNoiseCov.at<double>(i,i) = measurementNoise.at<double>(i); }
    cout << kf->measurementNoiseCov << endl;
-   data->kalman = kf;
+}
+
+Stabilizer::Stabilizer(int width, int height) {
+   data = new StabilizerData();
+   data->width = width;
+   data->height = height;
+   data->kalman = new KalmanFilter(18,9,0,CV_64F);
+   setupKalman(data->kalman);
 }
 
 Stabilizer::~Stabilizer() {
