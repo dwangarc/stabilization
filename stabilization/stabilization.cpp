@@ -77,6 +77,7 @@ public:
    int numOfStatic;
    cv::Mat transform;
    cv::Mat cameraTransform;
+   cv::Mat kalmanPose;
 };
 
 Frame::Frame(int width, int height, void* image) {
@@ -88,6 +89,7 @@ Frame::Frame(int width, int height, void* image) {
    numOfStatic = 0;
    transform = Mat::eye(3,3,CV_64F);
    cameraTransform = Mat::eye(3,3,CV_64F);
+   kalmanPose = Mat::eye(3,4,CV_64F);
 }
 
 void findFeatures(Frame* frame) {
@@ -236,16 +238,21 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    cameraTransformFromHomography(frame->transform, A, invA, frame->cameraTransform);
    cout << "Camera transform: " << frame->cameraTransform << endl;
    cout << "Last camera transform: " << lastFrame->cameraTransform << endl;
+   //It gives a transform between 
    Mat transform = lastFrame->cameraTransform * frame->cameraTransform;
+   //Mat transform = frame->cameraTransform;
    cout << "Wanted transform: " << transform << endl;
-   Mat desiredPose = transform * Mat::eye(3,4,CV_64F);
+   //Mat desiredPose = transform * Mat::eye(3,4,CV_64F);
+   Mat desiredPose = transform * lastFrame->kalmanPose;
    kalman->predict(); 
-   //TODO: I get kalmanPose. Need to get transform
    Mat kalmanPose = kalman->correct(desiredPose.reshape(0,12));
    kalmanPose = kalmanPose.reshape(0,6);
    cout << "KalmanPose: " << kalmanPose << endl;
    kalmanPose.resize(3);
-   Mat transformKF = kalmanPose.colRange(0,3);
+   frame->kalmanPose = kalmanPose;
+   //Mat transformKF = kalmanPose.colRange(0,3);
+   Mat transformKF;
+   solve(kalmanPose.inv(DECOMP_SVD),lastFrame->kalmanPose.inv(DECOMP_SVD),transformKF,DECOMP_SVD);
    cout << "TransformKF: " << transformKF << endl;
    frame->cameraTransform = transformKF;
    homographyFromCameraTransform(frame->cameraTransform, A, invA, frame->transform);
@@ -298,11 +305,11 @@ void setupKalman(KalmanFilter* kf) {
                                          ,0,0,0,0
                                          ,0,0,0,0);
    //for(int i=0;i<32;i++) { kf->processNoiseCov.at<double>(i,i) = processNoise.at<double>(i); }
-   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-3;
+   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-5;
    cout << kf->processNoiseCov << endl;
    setIdentity(kf->measurementNoiseCov);
    //for(int i=0;i<16;i++) { kf->measurementNoiseCov.at<double>(i,i) = measurementNoise.at<double>(i); }
-   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-5;
+   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-6;
    cout << kf->measurementNoiseCov << endl;
 }
 
