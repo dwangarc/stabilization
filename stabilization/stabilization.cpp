@@ -59,9 +59,9 @@ using namespace cv;
 #define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.10, 1e-2, 0.1\
                                         , 1e-2, 1.10, 0.1\
                                         , 1e-5, 1e-5, 1.1))
-#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 1.5, 1.0, 10\
-                                        , 1.0, 1.5, 10\
-                                        , 1.0, 1.0, 1.))
+#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 50\
+                                        , 0.7, 2.0, 50\
+                                        , 1.0, 1.0, 2.))
 #define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
@@ -103,7 +103,7 @@ void findFeatures(Frame* frame) {
 }
 
 void findTransform(Frame* lastFrame, Frame* frame) {
-   frame->transform = MATRIX_IDENTITY;
+   frame->transform = Mat::eye(3,3,CV_64F);
    if(lastFrame->features.size() == 0) return;
    vector<float> errFeatures;
    vector<uchar> statusFeatures;
@@ -209,6 +209,24 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
    //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
+void setupKalman(KalmanFilter* kf) {
+   kf->init(24,12,0,CV_64F);
+   kf->transitionMatrix = Mat::eye(24,24,CV_64F);
+   for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
+   cout << "Transition matrix: " << kf->transitionMatrix << endl;
+   setIdentity(kf->measurementMatrix);
+   kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
+                                         ,0,1,0,0
+                                         ,0,0,1,0
+                                         ,0,0,0,0
+                                         ,0,0,0,0
+                                         ,0,0,0,0);
+   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-3;
+   cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
+   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
+   cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
+}
+
 void cameraPoseFromHomography(const Mat& H, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& pose) {
    pose = invA*H*A*lastPose;
 }
@@ -231,6 +249,14 @@ void cameraMatrixFromParams(int width, int height, double focal, Mat& A, Mat& in
 
 void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
+   if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
+      cout << "Transform is too radical" << endl;
+      frame->isEjected = true;
+      setupKalman(kalman);
+      frame->pose = Mat::eye(3,4,CV_64F);
+      frame->transform = Mat::eye(3,3,CV_64F);
+      return;
+   }
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
    cout << "Camera matrix: " << A << endl;
@@ -266,24 +292,6 @@ public:
    KalmanFilter* kalman;
 };
 
-void setupKalman(KalmanFilter* kf) {
-   kf->init(24,12,0,CV_64F);
-   Mat trans(24,24,CV_64F);
-   for(int i=0;i<24;i++) { trans.at<double>(i,i) = 1; if(i<12) trans.at<double>(i,i+12)=1; }
-   kf->transitionMatrix = trans;
-   cout << "Transition matrix: " << kf->transitionMatrix << endl;
-   setIdentity(kf->measurementMatrix);
-   kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
-                                         ,0,1,0,0
-                                         ,0,0,1,0
-                                         ,0,0,0,0
-                                         ,0,0,0,0
-                                         ,0,0,0,0);
-   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-5;
-   cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
-   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-1;
-   cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
-}
 
 Stabilizer::Stabilizer(int width, int height) {
    data = new StabilizerData();
