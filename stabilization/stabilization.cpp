@@ -94,18 +94,19 @@ PID::PID(double kp, double ki, double kd): kp(kp), ki(ki), kd(kd) {
 void PID::fix(const Mat& src, Mat& dest) {
    Mat err = src-dest;
    cout << "error: " << err << endl;
-   //totalError += err;
+   totalError += err;
    Mat adj = Mat::zeros(3,4,CV_64F);
    for(int i=0;i<3;i++) for(int j=0;j<4;j++) {
       //adj.at<double>(i,j) = (atan((abs(err.at<double>(i,j))-MAX_ERROR.at<double>(i,j))*100)+1.5)/3.2;
-      adj.at<double>(i,j) = pow(abs(err.at<double>(i,j))/MAX_ERROR.at<double>(i,j),5);
-      if(adj.at<double>(i,j) > 1) adj.at<double>(i,j) = 1;
-      if(adj.at<double>(i,j) < 0) adj.at<double>(i,j) = 0;
-      if(err.at<double>(i,j) < 0) adj.at<double>(i,j)*=-1;
+      //adj.at<double>(i,j) = pow(abs(err.at<double>(i,j))/MAX_ERROR.at<double>(i,j),5);
+      adj.at<double>(i,j) = kp*err.at<double>(i,j);
+      //if(adj.at<double>(i,j) > 1) adj.at<double>(i,j) = 1;
+      //if(adj.at<double>(i,j) < 0) adj.at<double>(i,j) = 0;
+      //if(err.at<double>(i,j) < 0) adj.at<double>(i,j)*=-1;
    }
    cout << "adj: " << adj << endl;
-   //adj += totalError*ki + (lastError-err)*kd;
-   //lastError = err;
+   adj += totalError*ki + (lastError-err)*kd;
+   lastError = err;
    dest = dest+adj;
 }
 
@@ -212,10 +213,10 @@ void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* fr
    kalman->statePost = kalmanPose.clone();
    kalmanPose = kalmanPose.reshape(0,6);
    kalmanPose.resize(3);
+   frame->pose = pose.clone();
    pid->fix(kalmanPose, pose);
    cout << "PID'd pose: " << pose << endl;
-   frame->pose = pose.clone();
-   homographyFromCameraPose(frame->pose,A,invA,kalmanPose,frame->transform);
+   homographyFromCameraPose(pose,A,invA,kalmanPose,frame->transform);
    cout << "After: " << frame->transform << endl;
 }
 
@@ -253,9 +254,9 @@ Stabilizer::Stabilizer(int width, int height) {
    data->width = width;
    data->height = height;
    data->kalman = new KalmanFilter(32,16,0,CV_64F);
-   double kp = 0.1;
+   double kp = 0.3;
    double ki = 0.0;
-   double kd = 0.0;
+   double kd = 0.2;
    data->pid = new PID(kp,ki,kd);
    setupKalman(data->kalman);
 }
