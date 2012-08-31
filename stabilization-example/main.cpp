@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
       //data = new uint8_t[length];
       //fread(data, 1, length, file);
       //stab->addFrame(data);
-      cap >> frame;
+      if(!cap.read(frame)) break;
       stab->addFrame(frame.ptr());
       //delete [] data;
       draw( "stab", width, height, stab->getOriginalImage(), stab->getStabilizedImage());
