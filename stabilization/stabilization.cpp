@@ -214,7 +214,7 @@ void cameraPoseFromHomography(const Mat& H, const Mat& A, const Mat& invA, const
 }
 
 void homographyFromCameraPose(const Mat& pose, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& H) {
-   H = (A*lastPose*pose.inv(DECOMP_SVD)*invA).inv(DECOMP_SVD);
+   H = A*pose*lastPose.inv(DECOMP_SVD)*invA;
 }
 
 void cameraMatrixFromParams(int width, int height, double focal, Mat& A, Mat& invA) {
@@ -248,7 +248,6 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
 void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
-   //refineTransform(lastFrame, frame);
    refineTransform(kalman, lastFrame, frame);
    // Apply transformation
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
