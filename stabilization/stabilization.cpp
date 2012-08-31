@@ -271,32 +271,19 @@ void setupKalman(KalmanFilter* kf) {
    kf->init(24,12,0,CV_64F);
    Mat trans(24,24,CV_64F);
    for(int i=0;i<24;i++) { trans.at<double>(i,i) = 1; if(i<12) trans.at<double>(i,i+12)=1; }
-   Mat processNoise = (Mat_<double>(1,32) << 1e-5, 1e-5, 1e-5, 1e-5
-                                           , 1e-5, 1e-5, 1e-5, 1e-5
-                                           , 1e-5, 1e-5, 1e-5, 1e-5
-                                           , 1e-8, 1e-8, 1e-8, 1e-8
-                                           , 1e-8, 1e-8, 1e-8, 1e-8
-                                           , 1e-8, 1e-8, 1e-8, 1e-8);
-   Mat measurementNoise = (Mat_<double>(1,12) << 1e-3, 1e-3, 1e-3, 1e-3
-                                               , 1e-3, 1e-3, 1e-3, 1e-3
-                                               , 1e-3, 1e-3, 1e-3, 1e-3);
    kf->transitionMatrix = trans;
-   cout << kf->transitionMatrix << endl;
+   cout << "Transition matrix: " << kf->transitionMatrix << endl;
    setIdentity(kf->measurementMatrix);
-   setIdentity(kf->processNoiseCov);
    kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
                                          ,0,1,0,0
                                          ,0,0,1,0
                                          ,0,0,0,0
                                          ,0,0,0,0
                                          ,0,0,0,0);
-   //for(int i=0;i<32;i++) { kf->processNoiseCov.at<double>(i,i) = processNoise.at<double>(i); }
    kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-5;
-   cout << kf->processNoiseCov << endl;
-   setIdentity(kf->measurementNoiseCov);
-   //for(int i=0;i<16;i++) { kf->measurementNoiseCov.at<double>(i,i) = measurementNoise.at<double>(i); }
+   cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
    kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-1;
-   cout << kf->measurementNoiseCov << endl;
+   cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
 }
 
 Stabilizer::Stabilizer(int width, int height) {
