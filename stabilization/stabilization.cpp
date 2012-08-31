@@ -210,6 +210,8 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
 }
 
 void setupKalman(KalmanFilter* kf) {
+   double posNoise = 1e-3;
+   double velNoise = 1e-4;
    kf->init(24,12,0,CV_64F);
    kf->transitionMatrix = Mat::eye(24,24,CV_64F);
    for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
@@ -222,6 +224,9 @@ void setupKalman(KalmanFilter* kf) {
                                          ,0,0,0,0
                                          ,0,0,0,0);
    kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-3;
+   Mat posNoiseCov = Mat::eye(12,24,CV_64F)*(posNoise-velNoise);
+   posNoiseCov.resize(24);
+   kf->processNoiseCov += posNoiseCov;
    cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
    kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
    cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
@@ -247,8 +252,37 @@ void cameraMatrixFromParams(int width, int height, double focal, Mat& A, Mat& in
                             ,0,0,1);
 }
 
+//kalmanPose is vector now
+void normalizePose(Mat& kalmanPose, Mat& pose) {
+   Mat poseKF = kalmanPose.clone().reshape(0,6);
+   poseKF.resize(3);
+   poseKF = poseKF.inv(DECOMP_SVD);
+   for(int i=0;i<12;i++) kalmanPose.at<double>(i) = 0;
+   kalmanPose.at<double>(0) = 1;
+   kalmanPose.at<double>(5) = 1;
+   kalmanPose.at<double>(10) = 1;
+   pose = pose * poseKF * Mat::eye(3,4,CV_64F);
+}
+
 void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
+   Mat A, invA;
+   cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
+   cout << "Camera matrix: " << A << endl;
+   cameraPoseFromHomography(frame->transform, A, invA, lastFrame->pose, frame->pose);
+   cout << "Last pose: " << lastFrame->pose << endl << "Pose: " << frame->pose << endl;
+   Mat pose = frame->pose.clone();
+   kalman->predict();
+   Mat kalmanPose = kalman->correct(pose.reshape(0,12));
+   normalizePose(kalmanPose, pose);
+   frame->pose = pose.clone();
+   kalman->statePost = kalmanPose.clone();
+   kalmanPose = kalmanPose.reshape(0,6);
+   kalmanPose.resize(3);
+   cout << "Kalman pose: " << kalmanPose << endl;
+   cout << "Normalized pose: " << frame->pose << endl;
+   homographyFromCameraPose(frame->pose,A,invA,kalmanPose,frame->transform);
+   /*
    if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
       cout << "Transform is too radical" << endl;
       frame->isEjected = true;
@@ -257,17 +291,7 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
       frame->transform = Mat::eye(3,3,CV_64F);
       return;
    }
-   Mat A, invA;
-   cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
-   cout << "Camera matrix: " << A << endl;
-   cameraPoseFromHomography(frame->transform, A, invA, lastFrame->pose, frame->pose);
-   cout << "Last pose: " << lastFrame->pose << endl << "Pose: " << frame->pose << endl;
-   Mat pose = frame->pose.clone();
-   kalman->predict();
-   Mat kalmanPose = kalman->correct(pose.reshape(0,12)).reshape(0,6);
-   kalmanPose.resize(3);
-   cout << "Kalman pose: " << kalmanPose << endl;
-   homographyFromCameraPose(frame->pose,A,invA,kalmanPose,frame->transform);
+   */
    cout << "After: " << frame->transform << endl;
 }
 
