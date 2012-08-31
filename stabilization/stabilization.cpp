@@ -76,8 +76,7 @@ public:
    bool isEjected;
    int numOfStatic;
    cv::Mat transform;
-   cv::Mat cameraTransform;
-   cv::Mat kalmanPose;
+   cv::Mat pose;
 };
 
 Frame::Frame(int width, int height, void* image) {
@@ -88,8 +87,7 @@ Frame::Frame(int width, int height, void* image) {
    isEjected = false;
    numOfStatic = 0;
    transform = Mat::eye(3,3,CV_64F);
-   cameraTransform = Mat::eye(3,3,CV_64F);
-   kalmanPose = Mat::eye(3,4,CV_64F);
+   pose = Mat::eye(3,4,CV_64F);
 }
 
 void findFeatures(Frame* frame) {
@@ -211,12 +209,12 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
    //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
-void cameraTransformFromHomography(const Mat& H, const Mat& A, const Mat& invA, Mat& transf) {
-   transf = invA*H*A;
+void cameraPoseFromHomography(const Mat& H, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& pose) {
+   pose = invA*H*A*lastPose;
 }
 
-void homographyFromCameraTransform(const Mat& transf, const Mat& A, const Mat& invA, Mat& H) {
-   H = A*transf*invA;
+void homographyFromCameraPose(const Mat& pose, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& H) {
+   H = (A*lastPose*pose.inv(DECOMP_SVD)*invA).inv(DECOMP_SVD);
 }
 
 void cameraMatrixFromParams(int width, int height, double focal, Mat& A, Mat& invA) {
@@ -235,27 +233,15 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
-   cameraTransformFromHomography(frame->transform, A, invA, frame->cameraTransform);
-   cout << "Camera transform: " << frame->cameraTransform << endl;
-   cout << "Last camera transform: " << lastFrame->cameraTransform << endl;
-   //It gives a transform between 
-   Mat transform = lastFrame->cameraTransform * frame->cameraTransform;
-   //Mat transform = frame->cameraTransform;
-   cout << "Wanted transform: " << transform << endl;
-   //Mat desiredPose = transform * Mat::eye(3,4,CV_64F);
-   Mat desiredPose = transform * lastFrame->kalmanPose;
-   kalman->predict(); 
-   Mat kalmanPose = kalman->correct(desiredPose.reshape(0,12));
-   kalmanPose = kalmanPose.reshape(0,6);
-   cout << "KalmanPose: " << kalmanPose << endl;
+   cout << "Camera matrix: " << A << endl;
+   cameraPoseFromHomography(frame->transform, A, invA, lastFrame->pose, frame->pose);
+   cout << "Last pose: " << lastFrame->pose << endl << "Pose: " << frame->pose << endl;
+   Mat pose = frame->pose.clone();
+   kalman->predict();
+   Mat kalmanPose = kalman->correct(pose.reshape(0,12)).reshape(0,6);
    kalmanPose.resize(3);
-   frame->kalmanPose = kalmanPose;
-   //Mat transformKF = kalmanPose.colRange(0,3);
-   Mat transformKF;
-   solve(kalmanPose.inv(DECOMP_SVD),lastFrame->kalmanPose.inv(DECOMP_SVD),transformKF,DECOMP_SVD);
-   cout << "TransformKF: " << transformKF << endl;
-   frame->cameraTransform = transformKF;
-   homographyFromCameraTransform(frame->cameraTransform, A, invA, frame->transform);
+   cout << "Kalman pose: " << kalmanPose << endl;
+   homographyFromCameraPose(frame->pose,A,invA,kalmanPose,frame->transform);
    cout << "After: " << frame->transform << endl;
 }
 
@@ -309,7 +295,7 @@ void setupKalman(KalmanFilter* kf) {
    cout << kf->processNoiseCov << endl;
    setIdentity(kf->measurementNoiseCov);
    //for(int i=0;i<16;i++) { kf->measurementNoiseCov.at<double>(i,i) = measurementNoise.at<double>(i); }
-   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-6;
+   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F)*1e-1;
    cout << kf->measurementNoiseCov << endl;
 }
 
