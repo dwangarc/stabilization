@@ -210,7 +210,7 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
 }
 
 void setupKalman(KalmanFilter* kf) {
-   double posNoise = 1e-3;
+   //double posNoise = 1e-3;
    double velNoise = 1e-4;
    kf->init(24,12,0,CV_64F);
    kf->transitionMatrix = Mat::eye(24,24,CV_64F);
@@ -224,9 +224,9 @@ void setupKalman(KalmanFilter* kf) {
                                          ,0,0,0,0
                                          ,0,0,0,0);
    kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-3;
-   Mat posNoiseCov = Mat::eye(12,24,CV_64F)*(posNoise-velNoise);
-   posNoiseCov.resize(24);
-   kf->processNoiseCov += posNoiseCov;
+   //Mat posNoiseCov = Mat::eye(12,24,CV_64F)*(posNoise-velNoise);
+   //posNoiseCov.resize(24);
+   //kf->processNoiseCov += posNoiseCov;
    cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
    kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
    cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
