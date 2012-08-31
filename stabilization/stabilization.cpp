@@ -45,27 +45,8 @@ using namespace cv;
 #define LK_FLAGS 0
 #define LK_MIN_EIG_THRESHOLD 1e-3
 //
-//Transform estimation(refinement?)
+//Transform refinement
 //
-#define MIN_SIN 0.01
-#define MAX_SIN 0.1
-#define MIN_SCALE 1.01
-#define MAX_SCALE 1.5
-#define MIN_TRANS 0.1
-#define MAX_TRANS 10
-
-#define OPTIMISTIC_K 1
-#define OPTIMAL_DIST 2
-#define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.10, 1e-2, 0.1\
-                                        , 1e-2, 1.10, 0.1\
-                                        , 1e-5, 1e-5, 1.1))
-#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 10\
-                                        , 0.7, 2.0, 10\
-                                        , 1.0, 1.0, 2.))
-#define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
-                                               , 0.10, 1.09, 6\
-                                               , 0.01, 0.01, 1))
-
 #define MAX_ERROR Mat(Matx34d( 1.0, 0.5, 1., 1\
                              , 0.5, 1.0, 1., 1\
                              , 1.0, 1.0, 1., 1))
@@ -164,87 +145,6 @@ void findTransform(Frame* lastFrame, Frame* frame) {
    if(statusFeatures.size() < 4) return;
    // For some reason arguments should be reversed to what documentation says.
    frame->transform = findHomography(frame->features, lastFrame->features, CV_RANSAC);
-}
-
-//Why is it called such?
-double calcDistanceTo(const Mat& mat, const Mat& src_mat) {
-   double dist, max_dist = 0;
-   for(int i = 0; i < 3; i++)
-      for(int j = 0; j < 3; j++) {
-         //Should there be another abs?
-         dist = abs(mat.at<double>(i,j)) / src_mat.at<double>(i,j);
-         if(dist > max_dist) max_dist = dist;
-      }
-   return max_dist;
-}
-
-//What numOfStatic is supposed to mean?
-void refineTransform1(Frame* lastFrame, Frame* frame) {
-   //a01, a10 must be less then 1 and bigger than 0.1
-   double stheta = (frame->transform.at<double>(1,0)-frame->transform.at<double>(0,1))/2;
-   double scale = (frame->transform.at<double>(0,0)+frame->transform.at<double>(1,1))/sqrt(1-stheta*stheta)/2;
-   double tx = frame->transform.at<double>(0,2);
-   double ty = frame->transform.at<double>(1,2);
-   double skewX = frame->transform.at<double>(2,0);
-   double skewY = frame->transform.at<double>(2,1);
-   if(stheta > MAX_SIN || stheta < MIN_SIN) stheta = 0;
-   if( scale < 1 && (1/scale > MAX_SCALE || 1/scale < MIN_SCALE)
-     || scale >= 1 && (scale > MAX_SCALE || scale < MIN_SCALE)) scale = 1;
-   if(tx > MAX_TRANS || tx < MIN_TRANS) tx = 0;
-   if(ty > MAX_TRANS || ty < MIN_TRANS) ty = 0;;
-   double ctheta = sqrt(1-stheta*stheta);
-   double m[3][3] = {{scale*ctheta,-stheta,tx},{stheta,scale*ctheta,ty},{0,0,1}};
-   frame->transform = Mat(3,3,CV_64F, m);
-   cout << "Want transform: " << frame->transform << endl;
-   //cout << endl;
-   //cout << "Want sin(theta)=" << stheta << "\nscale=" << scale << "\nt=" << tx << "," << ty << "\nskew=" << skewX << "," << skewY << endl;
-   Mat orig_stab_tr = lastFrame->transform;
-   //Mat orig_stab_tr = MATRIX_IDENTITY;
-   if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
-      //cout << "Transformation is too strong. Assuming identity" << endl;
-      frame->isEjected = true;
-      frame->transform = MATRIX_IDENTITY;
-      return;
-   } else if(calcDistanceTo(frame->transform, MATRIX_MIN_TRANSFORM) <= 1) {
-      //cout << "Transformation is too week. Using previous" << endl; 
-      frame->numOfStatic = lastFrame->numOfStatic + 1;
-   } else {
-      //cout << "Transformation is OK. Using composition of current and previous" << endl;
-      orig_stab_tr = frame->transform * orig_stab_tr;
-   }
-
-   if(calcDistanceTo(orig_stab_tr, MATRIX_MIN_TRANSFORM) < 1) {
-      //cout << "New transformation is too week. Assuming identity." << endl;
-      frame->transform = MATRIX_IDENTITY;
-      return;
-   }
-   
-   double orig_stab_dist = calcDistanceTo(orig_stab_tr, MATRIX_MAX_NORMAL_TRANSFORM);
-
-   double weight;
-   if(orig_stab_dist <= 1) {
-      //cout << "New transformation has not reached something" << endl;
-      if(frame->numOfStatic > OPTIMISTIC_K + 2) {
-         //cout << "New transformation has been applied to too many frames. Damping." << endl;
-         weight = 0.8;
-      } else {
-         //cout << "New transformation is the best choice" << endl;
-         weight = 0.9;
-      }
-   } else {
-      //cout << "New transformation has reached something" << endl;
-      if(lastFrame->numOfStatic > OPTIMISTIC_K) {
-         //cout << "lastFrame->numOfStatic > OPTIMISTIC_K. Applying smart damping" << endl;
-         //double func_val = pow(log(orig_stab_dist) + 1, -1./OPTIMAL_DIST);
-         weight = 0.8;
-      } else {
-         //cout << "lastFrame->numOfStatic <= OPTIMISITIC_K. Still applying damping. And assuming frame static." << endl;
-         frame->numOfStatic = lastFrame->numOfStatic + 1;
-         weight = 0.9;
-      }
-   }
-   //frame->transform = weight * orig_stab_tr + (1-weight) * MATRIX_IDENTITY;
-   //cout << "Will apply transformation: " << frame->transform << endl;
 }
 
 void setupKalman(KalmanFilter* kf) {
