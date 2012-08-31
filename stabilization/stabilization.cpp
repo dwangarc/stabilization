@@ -59,12 +59,16 @@ using namespace cv;
 #define MATRIX_MIN_TRANSFORM Mat(Matx33d( 1.10, 1e-2, 0.1\
                                         , 1e-2, 1.10, 0.1\
                                         , 1e-5, 1e-5, 1.1))
-#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 50\
-                                        , 0.7, 2.0, 50\
+#define MATRIX_MAX_TRANSFORM Mat(Matx33d( 2.0, 0.7, 10\
+                                        , 0.7, 2.0, 10\
                                         , 1.0, 1.0, 2.))
 #define MATRIX_MAX_NORMAL_TRANSFORM Mat(Matx33d( 1.09, 0.10, 6\
                                                , 0.10, 1.09, 6\
                                                , 0.01, 0.01, 1))
+
+#define MAX_ERROR Mat(Matx34d( 1.0, 0.5, 1., 1\
+                             , 0.5, 1.0, 1., 1\
+                             , 1.0, 1.0, 1., 1))
 
 class Frame {
 public:
@@ -88,6 +92,40 @@ Frame::Frame(int width, int height, void* image) {
    numOfStatic = 0;
    transform = Mat::eye(3,3,CV_64F);
    pose = Mat::eye(3,4,CV_64F);
+}
+
+class PID {
+public:
+   PID(double kp, double ki, double kd);
+   double kp;
+   double ki;
+   double kd;
+   void fix(const Mat& src, Mat& dest);
+   Mat totalError;
+   Mat lastError;
+};
+
+PID::PID(double kp, double ki, double kd): kp(kp), ki(ki), kd(kd) {
+   totalError = Mat::zeros(3,4,CV_64F);
+   lastError = Mat::zeros(3,4,CV_64F);
+}
+
+void PID::fix(const Mat& src, Mat& dest) {
+   Mat err = src-dest;
+   cout << "error: " << err << endl;
+   //totalError += err;
+   Mat adj = Mat::zeros(3,4,CV_64F);
+   for(int i=0;i<3;i++) for(int j=0;j<4;j++) {
+      //adj.at<double>(i,j) = (atan((abs(err.at<double>(i,j))-MAX_ERROR.at<double>(i,j))*100)+1.5)/3.2;
+      adj.at<double>(i,j) = pow(abs(err.at<double>(i,j))/MAX_ERROR.at<double>(i,j),5);
+      if(adj.at<double>(i,j) > 1) adj.at<double>(i,j) = 1;
+      if(adj.at<double>(i,j) < 0) adj.at<double>(i,j) = 0;
+      if(err.at<double>(i,j) < 0) adj.at<double>(i,j)*=-1;
+   }
+   cout << "adj: " << adj << endl;
+   //adj += totalError*ki + (lastError-err)*kd;
+   //lastError = err;
+   dest = dest+adj;
 }
 
 void findFeatures(Frame* frame) {
@@ -210,8 +248,6 @@ void refineTransform1(Frame* lastFrame, Frame* frame) {
 }
 
 void setupKalman(KalmanFilter* kf) {
-   //double posNoise = 1e-3;
-   double velNoise = 1e-4;
    kf->init(24,12,0,CV_64F);
    kf->transitionMatrix = Mat::eye(24,24,CV_64F);
    for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
@@ -223,10 +259,7 @@ void setupKalman(KalmanFilter* kf) {
                                          ,0,0,0,0
                                          ,0,0,0,0
                                          ,0,0,0,0);
-   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-3;
-   //Mat posNoiseCov = Mat::eye(12,24,CV_64F)*(posNoise-velNoise);
-   //posNoiseCov.resize(24);
-   //kf->processNoiseCov += posNoiseCov;
+   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-4;
    cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
    kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
    cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
@@ -264,7 +297,7 @@ void normalizePose(Mat& kalmanPose, Mat& pose) {
    pose = pose * poseKF * Mat::eye(3,4,CV_64F);
 }
 
-void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
+void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
@@ -275,36 +308,34 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    kalman->predict();
    Mat kalmanPose = kalman->correct(pose.reshape(0,12));
    normalizePose(kalmanPose, pose);
-   frame->pose = pose.clone();
+   cout << "Normalized pose: " << pose << endl;
    kalman->statePost = kalmanPose.clone();
    kalmanPose = kalmanPose.reshape(0,6);
    kalmanPose.resize(3);
-   cout << "Kalman pose: " << kalmanPose << endl;
-   cout << "Normalized pose: " << frame->pose << endl;
+   pid->fix(kalmanPose, pose);
+   cout << "PID'd pose: " << pose << endl;
+   frame->pose = pose.clone();
    homographyFromCameraPose(frame->pose,A,invA,kalmanPose,frame->transform);
-   /*
-   if(calcDistanceTo(frame->transform, MATRIX_MAX_TRANSFORM) > 1) {
-      cout << "Transform is too radical" << endl;
-      frame->isEjected = true;
-      setupKalman(kalman);
-      frame->pose = Mat::eye(3,4,CV_64F);
-      frame->transform = Mat::eye(3,3,CV_64F);
-      return;
-   }
-   */
    cout << "After: " << frame->transform << endl;
 }
 
-void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
+void stabilize(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
-   refineTransform(kalman, lastFrame, frame);
+   refineTransform(kalman, pid, lastFrame, frame);
    // Apply transformation
+   Mat mask = Mat::ones(frame->img.rows, frame->img.cols, CV_64F);
+   Mat warpedMask = Mat::zeros(frame->img.rows, frame->img.cols, CV_64F);
+   frame->stabImg = lastFrame->stabImg.clone();
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
-   // Draw circles around detected features.
-   for(uint i = 0; i < frame->features.size(); i++) {
-      circle(frame->img,frame->features[i],10,-1);
+   warpPerspective(mask,warpedMask,frame->transform,frame->img.size());
+   for(int i=0;i<mask.rows;i++) for(int j=0;j<mask.cols;j++) {
+      frame->stabImg.at<Vec3b>(i,j) += (1-warpedMask.at<double>(i,j))*lastFrame->stabImg.at<Vec3b>(i,j);
    }
+   // Draw circles around detected features.
+   //for(uint i = 0; i < frame->features.size(); i++) {
+   //   circle(frame->img,frame->features[i],10,-1);
+   //}
 }
 
 class StabilizerData {
@@ -314,14 +345,18 @@ public:
    int width;
    int height;
    KalmanFilter* kalman;
+   PID* pid;
 };
-
 
 Stabilizer::Stabilizer(int width, int height) {
    data = new StabilizerData();
    data->width = width;
    data->height = height;
    data->kalman = new KalmanFilter(32,16,0,CV_64F);
+   double kp = 0.1;
+   double ki = 0.0;
+   double kd = 0.0;
+   data->pid = new PID(kp,ki,kd);
    setupKalman(data->kalman);
 }
 
@@ -329,6 +364,7 @@ Stabilizer::~Stabilizer() {
    if(data->frame) delete data->frame;
    if(data->prevFrame) delete data->prevFrame;
    if(data->kalman) delete data->kalman;
+   if(data->pid) delete data->pid;
    delete data;
 }
 
@@ -347,7 +383,7 @@ int Stabilizer::addFrame(void* image, int width, int height) {
       delete data->prevFrame;
       data->prevFrame = data->frame;
       data->frame = frame;
-      stabilize(data->kalman, data->prevFrame, data->frame);
+      stabilize(data->kalman, data->pid, data->prevFrame, data->frame);
    }
    return 0;
 }
