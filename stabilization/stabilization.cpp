@@ -229,31 +229,31 @@ void simplifyTransform(double width, double height, Mat& homography) {
    Mat br = (Mat_<double>(3,1) << width,height,1);
    Mat v[] = {tl,tr,bl,br};
    int i;
-   cout << "Homographed points: " << endl;
+   //cout << "Homographed points: " << endl;
    for(i=0;i<4;i++) {
       v[i] = homography * v[i];
       v[i] = v[i] / v[i].at<double>(2,0);
       cout << i << ": " << v[i] << endl;
    }
    Mat pivot = (v[0]+v[1]+v[2]+v[3])/4;
-   cout << "Pivot is: " << pivot << endl;
+   //cout << "Pivot is: " << pivot << endl;
    double avgDist = 0;
-   cout << "Pivot vectors are: " << endl;
+   //cout << "Pivot vectors are: " << endl;
    for(i=0;i<4;i++) {
       v[i] = v[i]-pivot;
       cout << i << ": " << v[i] << endl;
       avgDist += norm(v[i]);
    }
    avgDist/=4;
-   cout << "Average distance is: " << avgDist << endl;
-   cout << "New pivot vectors are: " << endl;
+   //cout << "Average distance is: " << avgDist << endl;
+   //cout << "New pivot vectors are: " << endl;
    for(i=0;i<4;i++) {
       v[i] = pivot + v[i]/norm(v[i])*avgDist;
       cout << i << ": " << v[i] << endl;
    }
    Point2f origPoints[] = {Point2f(0,0), Point2f(width,0), Point(0,height), Point(width,height)};
    Point2f newPoints[4];
-   cout << "Mapping: " << endl;
+   //cout << "Mapping: " << endl;
    for(i=0;i<4;i++) {
       newPoints[i] = Point2f((float)v[i].at<double>(0,0),(float)v[i].at<double>(1,0));
       cout << origPoints[i] << " -> " << newPoints[i] << endl;
@@ -264,7 +264,7 @@ void simplifyTransform(double width, double height, Mat& homography) {
 }
 
 void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
-   cout << endl << "Before: " << frame->transform << endl;
+   //cout << endl << "Before: " << frame->transform << endl;
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
    //cout << "Camera matrix: " << A << endl;
@@ -280,11 +280,11 @@ void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* fr
    kalmanPose.resize(3);
    frame->pose = pose.clone();
    homographyFromCameraPose(pose,A,invA,kalmanPose,frame->transform);
-   cout << "After pose estimation: " << frame->transform << endl;
+   //cout << "After pose estimation: " << frame->transform << endl;
    simplifyTransform(frame->img.cols, frame->img.rows, frame->transform);
-   cout << "After simplification: " << frame->transform << endl;
+   //cout << "After simplification: " << frame->transform << endl;
    snapHomography(frame->img.cols, frame->img.rows, frame->transform, frame->pose, kalman->statePost);
-   cout << "After snapping: " << frame->transform << endl;
+   //cout << "After snapping: " << frame->transform << endl;
 }
 
 void stabilize(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
