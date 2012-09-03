@@ -50,6 +50,7 @@ using namespace cv;
 #define MAX_ERROR Mat(Matx34d( 1.0, 0.5, 1., 1\
                              , 0.5, 1.0, 1., 1\
                              , 1.0, 1.0, 1., 1))
+#define MAX_DIST 200
 
 class Frame {
 public:
@@ -104,8 +105,8 @@ void PID::fix(const Mat& src, Mat& dest) {
       //if(adj.at<double>(i,j) < 0) adj.at<double>(i,j) = 0;
       //if(err.at<double>(i,j) < 0) adj.at<double>(i,j)*=-1;
    }
-   cout << "adj: " << adj << endl;
    adj += totalError*ki + (lastError-err)*kd;
+   cout << "adj: " << adj << endl;
    lastError = err;
    dest = dest+adj;
 }
@@ -152,7 +153,7 @@ void setupKalman(KalmanFilter* kf) {
    kf->init(24,12,0,CV_64F);
    kf->transitionMatrix = Mat::eye(24,24,CV_64F);
    for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
-   cout << "Transition matrix: " << kf->transitionMatrix << endl;
+//   cout << "Transition matrix: " << kf->transitionMatrix << endl;
    setIdentity(kf->measurementMatrix);
    kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
                                          ,0,1,0,0
@@ -161,9 +162,9 @@ void setupKalman(KalmanFilter* kf) {
                                          ,0,0,0,0
                                          ,0,0,0,0);
    kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-4;
-   cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
+   //cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
    kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
-   cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
+   //cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
 }
 
 void cameraPoseFromHomography(const Mat& H, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& pose) {
@@ -198,26 +199,92 @@ void normalizePose(Mat& kalmanPose, Mat& pose) {
    pose = pose * poseKF * Mat::eye(3,4,CV_64F);
 }
 
+//If transformation is too agressive, make it Identity
+void snapHomography(double width, double height, Mat& homography, Mat& pose, Mat& kalmanPose) {
+   double dist = 0;
+   Mat tl = (Mat_<double>(3,1) << 0,0,1);
+   Mat tr = (Mat_<double>(3,1) << width,0,1);
+   Mat bl = (Mat_<double>(3,1) << 0,height,1);
+   Mat br = (Mat_<double>(3,1) << width,height,1);
+   dist += norm(tl, homography * tl);
+   dist += norm(tr, homography * tr);
+   dist += norm(bl, homography * bl);
+   dist += norm(br, homography * br);
+   cout << "Dist is: " << dist << endl;
+   if(dist > MAX_DIST) {
+      cout << "tl: " << tl << "-> " << homography*tl << endl;
+      cout << "tl: " << tr << "-> " << homography*tr << endl;
+      cout << "tl: " << bl << "-> " << homography*bl << endl;
+      cout << "tl: " << br << "-> " << homography*br << endl;
+      homography = Mat::eye(3,3,CV_64F);
+      pose = Mat::eye(3,4,CV_64F);
+      for(int i=12;i<24;i++) kalmanPose.at<double>(i) = 0;
+   }
+}
+
+void simplifyTransform(double width, double height, Mat& homography) {
+   Mat tl = (Mat_<double>(3,1) << 0,0,1);
+   Mat tr = (Mat_<double>(3,1) << width,0,1);
+   Mat bl = (Mat_<double>(3,1) << 0,height,1);
+   Mat br = (Mat_<double>(3,1) << width,height,1);
+   Mat v[] = {tl,tr,bl,br};
+   int i;
+   cout << "Homographed points: " << endl;
+   for(i=0;i<4;i++) {
+      v[i] = homography * v[i];
+      v[i] = v[i] / v[i].at<double>(2,0);
+      cout << i << ": " << v[i] << endl;
+   }
+   Mat pivot = (v[0]+v[1]+v[2]+v[3])/4;
+   cout << "Pivot is: " << pivot << endl;
+   double avgDist = 0;
+   cout << "Pivot vectors are: " << endl;
+   for(i=0;i<4;i++) {
+      v[i] = v[i]-pivot;
+      cout << i << ": " << v[i] << endl;
+      avgDist += norm(v[i]);
+   }
+   avgDist/=4;
+   cout << "Average distance is: " << avgDist << endl;
+   cout << "New pivot vectors are: " << endl;
+   for(i=0;i<4;i++) {
+      v[i] = pivot + v[i]/norm(v[i])*avgDist;
+      cout << i << ": " << v[i] << endl;
+   }
+   Point2f origPoints[] = {Point2f(0,0), Point2f(width,0), Point(0,height), Point(width,height)};
+   Point2f newPoints[4];
+   cout << "Mapping: " << endl;
+   for(i=0;i<4;i++) {
+      newPoints[i] = Point2f((float)v[i].at<double>(0,0),(float)v[i].at<double>(1,0));
+      cout << origPoints[i] << " -> " << newPoints[i] << endl;
+   }
+   homography = getAffineTransform(origPoints,newPoints);
+   homography.resize(3,0);
+   homography.at<double>(2,2) = 1;
+}
+
 void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
    cout << endl << "Before: " << frame->transform << endl;
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
-   cout << "Camera matrix: " << A << endl;
+   //cout << "Camera matrix: " << A << endl;
    cameraPoseFromHomography(frame->transform, A, invA, lastFrame->pose, frame->pose);
-   cout << "Last pose: " << lastFrame->pose << endl << "Pose: " << frame->pose << endl;
+   //cout << "Last pose: " << lastFrame->pose << endl << "Pose: " << frame->pose << endl;
    Mat pose = frame->pose.clone();
    kalman->predict();
    Mat kalmanPose = kalman->correct(pose.reshape(0,12));
    normalizePose(kalmanPose, pose);
-   cout << "Normalized pose: " << pose << endl;
+   //cout << "Normalized pose: " << pose << endl;
    kalman->statePost = kalmanPose.clone();
    kalmanPose = kalmanPose.reshape(0,6);
    kalmanPose.resize(3);
    frame->pose = pose.clone();
-   pid->fix(kalmanPose, pose);
-   cout << "PID'd pose: " << pose << endl;
    homographyFromCameraPose(pose,A,invA,kalmanPose,frame->transform);
-   cout << "After: " << frame->transform << endl;
+   cout << "After pose estimation: " << frame->transform << endl;
+   simplifyTransform(frame->img.cols, frame->img.rows, frame->transform);
+   cout << "After simplification: " << frame->transform << endl;
+   snapHomography(frame->img.cols, frame->img.rows, frame->transform, frame->pose, kalman->statePost);
+   cout << "After snapping: " << frame->transform << endl;
 }
 
 void stabilize(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
