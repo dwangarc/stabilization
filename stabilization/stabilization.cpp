@@ -93,7 +93,7 @@ void findTransform(Frame* lastFrame, Frame* frame) {
                                      , LK_ITER_COUNT, LK_ITER_EPS)
                        , LK_FLAGS, LK_MIN_EIG_THRESHOLD);
    if(lastFrame->features.size() != frame->features.size()) return;
-   for(uint i = 0; i < statusFeatures.size(); i++) {
+   for(unsigned int i = 0; i < statusFeatures.size(); i++) {
       if(!statusFeatures[i]) {
          frame->features.erase(frame->features.begin()+i);
          lastFrame->features.erase(lastFrame->features.begin()+i);
@@ -243,7 +243,7 @@ void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    refineTransform(kalman, lastFrame, frame);
    applyTransform(lastFrame,frame);
    // Draw circles around detected features.
-   //for(uint i = 0; i < frame->features.size(); i++) {
+   //for(unsigned int i = 0; i < frame->features.size(); i++) {
    //   circle(frame->img,frame->features[i],10,-1);
    //}
 }
@@ -255,6 +255,7 @@ public:
    int width;
    int height;
    KalmanFilter* kalman;
+   bool state;
 };
 
 void setupKalman(KalmanFilter** kalman) {
@@ -281,6 +282,7 @@ Stabilizer::Stabilizer(int width, int height) {
    data->width = width;
    data->height = height;
    setupKalman(&data->kalman);
+   data->state = true;
 }
 
 Stabilizer::~Stabilizer() {
@@ -305,7 +307,8 @@ int Stabilizer::addFrame(void* image, int width, int height) {
       delete data->prevFrame;
       data->prevFrame = data->frame;
       data->frame = frame;
-      stabilize(data->kalman, data->prevFrame, data->frame);
+      if(data->state) 
+         stabilize(data->kalman, data->prevFrame, data->frame);
    }
    return 0;
 }
@@ -313,3 +316,5 @@ int Stabilizer::addFrame(void* image, int width, int height) {
 void* Stabilizer::getStabilizedImage() { return this->data->frame->stabImg.ptr(); }
 
 void* Stabilizer::getOriginalImage() { return this->data->frame->img.ptr(); }
+
+void Stabilizer::setStabilization(bool state) { data->state = state; }

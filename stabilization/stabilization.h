@@ -26,6 +26,8 @@ public:
    void* getStabilizedImage();
    // Will give a pointer to internal image in BGR3
    void* getOriginalImage();
+   // Turn stabilization on/off
+   void setStabilization(bool state);
 private:
    StabilizerData* data;
 };
