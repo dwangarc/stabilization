@@ -61,8 +61,7 @@ public:
 };
 
 Frame::Frame(int width, int height, void* image) {
-   Mat mimg = Mat(height,width,CV_8UC3,image);
-   img = mimg.clone();
+   img = Mat(height,width,CV_8UC3,image);
    stabImg = img.clone();
    cvtColor(img,grayImg,CV_BGR2GRAY);
    transform = Mat::eye(3,3,CV_64F);
@@ -227,7 +226,7 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    //cout << "After snapping: " << frame->transform << endl;
 }
 
-void applyTransform(Frame* frame) {
+void applyTransform(Frame* lastFrame, Frame* frame) {
    frame->stabImg = lastFrame->stabImg.clone();
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
    Mat mask = Mat::ones(frame->img.rows, frame->img.cols, CV_64F);
@@ -242,7 +241,7 @@ void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
    refineTransform(kalman, lastFrame, frame);
-   applyTransform(frame);
+   applyTransform(lastFrame,frame);
    // Draw circles around detected features.
    //for(uint i = 0; i < frame->features.size(); i++) {
    //   circle(frame->img,frame->features[i],10,-1);
