@@ -111,24 +111,6 @@ void findTransform(Frame* lastFrame, Frame* frame) {
    frame->transform = findHomography(frame->features, lastFrame->features, CV_RANSAC);
 }
 
-void setupKalman(KalmanFilter* kf) {
-   kf->init(24,12,0,CV_64F);
-   kf->transitionMatrix = Mat::eye(24,24,CV_64F);
-   for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
-   //cout << "Transition matrix: " << kf->transitionMatrix << endl;
-   setIdentity(kf->measurementMatrix);
-   kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
-                                         ,0,1,0,0
-                                         ,0,0,1,0
-                                         ,0,0,0,0
-                                         ,0,0,0,0
-                                         ,0,0,0,0);
-   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-4;
-   //cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
-   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
-   //cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
-}
-
 void cameraPoseFromHomography(const Mat& H, const Mat& A, const Mat& invA, const Mat& lastPose, Mat& pose) {
    pose = invA*H*A*lastPose;
 }
@@ -277,12 +259,30 @@ public:
    KalmanFilter* kalman;
 };
 
+void setupKalman(KalmanFilter** kalman) {
+   KalmanFilter* kf = new KalmanFilter(24,12,0,CV_64F);
+   *kalman = kf;
+   kf->transitionMatrix = Mat::eye(24,24,CV_64F);
+   for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
+   //cout << "Transition matrix: " << kf->transitionMatrix << endl;
+   setIdentity(kf->measurementMatrix);
+   kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
+                                         ,0,1,0,0
+                                         ,0,0,1,0
+                                         ,0,0,0,0
+                                         ,0,0,0,0
+                                         ,0,0,0,0);
+   kf->processNoiseCov = Mat::eye(24,24,CV_64F)*1e-4;
+   //cout << "Process noise covariance matrix: " << kf->processNoiseCov << endl;
+   kf->measurementNoiseCov = Mat::eye(12,12,CV_64F);
+   //cout << "Measurement noise covariance matrix" << kf->measurementNoiseCov << endl;
+}
+
 Stabilizer::Stabilizer(int width, int height) {
    data = new StabilizerData();
    data->width = width;
    data->height = height;
-   data->kalman = new KalmanFilter(32,16,0,CV_64F);
-   setupKalman(data->kalman);
+   setupKalman(&data->kalman);
 }
 
 Stabilizer::~Stabilizer() {
