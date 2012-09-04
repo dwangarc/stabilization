@@ -56,8 +56,6 @@ public:
    cv::Mat grayImg;
    cv::Mat stabImg;
    std::vector<cv::Point2f> features;
-   bool isEjected;
-   int numOfStatic;
    cv::Mat transform;
    cv::Mat pose;
 };
@@ -67,14 +65,12 @@ Frame::Frame(int width, int height, void* image) {
    img = mimg.clone();
    stabImg = img.clone();
    cvtColor(img,grayImg,CV_BGR2GRAY);
-   isEjected = false;
-   numOfStatic = 0;
    transform = Mat::eye(3,3,CV_64F);
    pose = Mat::eye(3,4,CV_64F);
 }
 
 void findFeatures(Frame* frame) {
-   if(frame->isEjected || frame->features.size() < 0.8*CORNERS_MAX_COUNT)
+   if(frame->features.size() < 0.8*CORNERS_MAX_COUNT)
       goodFeaturesToTrack( frame->grayImg, frame->features
                          , CORNERS_MAX_COUNT, CORNERS_QUALITY, CORNERS_MIN_DISTANCE
                          , CORNERS_MASK, CORNERS_BLOCK_SIZE, CORNERS_USE_HARRIS
