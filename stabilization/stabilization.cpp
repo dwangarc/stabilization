@@ -47,9 +47,6 @@ using namespace cv;
 //
 //Transform refinement
 //
-#define MAX_ERROR Mat(Matx34d( 1.0, 0.5, 1., 1\
-                             , 0.5, 1.0, 1., 1\
-                             , 1.0, 1.0, 1., 1))
 #define MAX_DIST 200
 
 class Frame {
@@ -74,41 +71,6 @@ Frame::Frame(int width, int height, void* image) {
    numOfStatic = 0;
    transform = Mat::eye(3,3,CV_64F);
    pose = Mat::eye(3,4,CV_64F);
-}
-
-class PID {
-public:
-   PID(double kp, double ki, double kd);
-   double kp;
-   double ki;
-   double kd;
-   void fix(const Mat& src, Mat& dest);
-   Mat totalError;
-   Mat lastError;
-};
-
-PID::PID(double kp, double ki, double kd): kp(kp), ki(ki), kd(kd) {
-   totalError = Mat::zeros(3,4,CV_64F);
-   lastError = Mat::zeros(3,4,CV_64F);
-}
-
-void PID::fix(const Mat& src, Mat& dest) {
-   Mat err = src-dest;
-   cout << "error: " << err << endl;
-   totalError += err;
-   Mat adj = Mat::zeros(3,4,CV_64F);
-   for(int i=0;i<3;i++) for(int j=0;j<4;j++) {
-      //adj.at<double>(i,j) = (atan((abs(err.at<double>(i,j))-MAX_ERROR.at<double>(i,j))*100)+1.5)/3.2;
-      //adj.at<double>(i,j) = pow(abs(err.at<double>(i,j))/MAX_ERROR.at<double>(i,j),5);
-      adj.at<double>(i,j) = kp*err.at<double>(i,j);
-      //if(adj.at<double>(i,j) > 1) adj.at<double>(i,j) = 1;
-      //if(adj.at<double>(i,j) < 0) adj.at<double>(i,j) = 0;
-      //if(err.at<double>(i,j) < 0) adj.at<double>(i,j)*=-1;
-   }
-   adj += totalError*ki + (lastError-err)*kd;
-   cout << "adj: " << adj << endl;
-   lastError = err;
-   dest = dest+adj;
 }
 
 void findFeatures(Frame* frame) {
@@ -153,7 +115,7 @@ void setupKalman(KalmanFilter* kf) {
    kf->init(24,12,0,CV_64F);
    kf->transitionMatrix = Mat::eye(24,24,CV_64F);
    for(int i=0;i<12;i++) { kf->transitionMatrix.at<double>(i,i+12)=1; }
-//   cout << "Transition matrix: " << kf->transitionMatrix << endl;
+   //cout << "Transition matrix: " << kf->transitionMatrix << endl;
    setIdentity(kf->measurementMatrix);
    kf->statePost = (Mat_<double>(24,1) << 1,0,0,0
                                          ,0,1,0,0
@@ -210,12 +172,12 @@ void snapHomography(double width, double height, Mat& homography, Mat& pose, Mat
    dist += norm(tr, homography * tr);
    dist += norm(bl, homography * bl);
    dist += norm(br, homography * br);
-   cout << "Dist is: " << dist << endl;
+   //cout << "Dist is: " << dist << endl;
    if(dist > MAX_DIST) {
-      cout << "tl: " << tl << "-> " << homography*tl << endl;
-      cout << "tl: " << tr << "-> " << homography*tr << endl;
-      cout << "tl: " << bl << "-> " << homography*bl << endl;
-      cout << "tl: " << br << "-> " << homography*br << endl;
+      //cout << "tl: " << tl << "-> " << homography*tl << endl;
+      //cout << "tl: " << tr << "-> " << homography*tr << endl;
+      //cout << "tl: " << bl << "-> " << homography*bl << endl;
+      //cout << "tl: " << br << "-> " << homography*br << endl;
       homography = Mat::eye(3,3,CV_64F);
       pose = Mat::eye(3,4,CV_64F);
       for(int i=12;i<24;i++) kalmanPose.at<double>(i) = 0;
@@ -233,7 +195,7 @@ void simplifyTransform(double width, double height, Mat& homography) {
    for(i=0;i<4;i++) {
       v[i] = homography * v[i];
       v[i] = v[i] / v[i].at<double>(2,0);
-      cout << i << ": " << v[i] << endl;
+      //cout << i << ": " << v[i] << endl;
    }
    Mat pivot = (v[0]+v[1]+v[2]+v[3])/4;
    //cout << "Pivot is: " << pivot << endl;
@@ -241,7 +203,7 @@ void simplifyTransform(double width, double height, Mat& homography) {
    //cout << "Pivot vectors are: " << endl;
    for(i=0;i<4;i++) {
       v[i] = v[i]-pivot;
-      cout << i << ": " << v[i] << endl;
+      //cout << i << ": " << v[i] << endl;
       avgDist += norm(v[i]);
    }
    avgDist/=4;
@@ -249,21 +211,21 @@ void simplifyTransform(double width, double height, Mat& homography) {
    //cout << "New pivot vectors are: " << endl;
    for(i=0;i<4;i++) {
       v[i] = pivot + v[i]/norm(v[i])*avgDist;
-      cout << i << ": " << v[i] << endl;
+      //cout << i << ": " << v[i] << endl;
    }
    Point2f origPoints[] = {Point2f(0,0), Point2f(width,0), Point(0,height), Point(width,height)};
    Point2f newPoints[4];
    //cout << "Mapping: " << endl;
    for(i=0;i<4;i++) {
       newPoints[i] = Point2f((float)v[i].at<double>(0,0),(float)v[i].at<double>(1,0));
-      cout << origPoints[i] << " -> " << newPoints[i] << endl;
+      //cout << origPoints[i] << " -> " << newPoints[i] << endl;
    }
    homography = getAffineTransform(origPoints,newPoints);
    homography.resize(3,0);
    homography.at<double>(2,2) = 1;
 }
 
-void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
+void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    //cout << endl << "Before: " << frame->transform << endl;
    Mat A, invA;
    cameraMatrixFromParams(frame->img.cols, frame->img.rows, 30, A, invA);
@@ -287,10 +249,10 @@ void refineTransform(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* fr
    //cout << "After snapping: " << frame->transform << endl;
 }
 
-void stabilize(KalmanFilter* kalman, PID* pid, Frame* lastFrame, Frame* frame) {
+void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    findFeatures(lastFrame);
    findTransform(lastFrame, frame);
-   refineTransform(kalman, pid, lastFrame, frame);
+   refineTransform(kalman, lastFrame, frame);
    // Apply transformation
    Mat mask = Mat::ones(frame->img.rows, frame->img.cols, CV_64F);
    Mat warpedMask = Mat::zeros(frame->img.rows, frame->img.cols, CV_64F);
@@ -313,7 +275,6 @@ public:
    int width;
    int height;
    KalmanFilter* kalman;
-   PID* pid;
 };
 
 Stabilizer::Stabilizer(int width, int height) {
@@ -321,10 +282,6 @@ Stabilizer::Stabilizer(int width, int height) {
    data->width = width;
    data->height = height;
    data->kalman = new KalmanFilter(32,16,0,CV_64F);
-   double kp = 0.3;
-   double ki = 0.0;
-   double kd = 0.2;
-   data->pid = new PID(kp,ki,kd);
    setupKalman(data->kalman);
 }
 
@@ -332,7 +289,6 @@ Stabilizer::~Stabilizer() {
    if(data->frame) delete data->frame;
    if(data->prevFrame) delete data->prevFrame;
    if(data->kalman) delete data->kalman;
-   if(data->pid) delete data->pid;
    delete data;
 }
 
@@ -351,7 +307,7 @@ int Stabilizer::addFrame(void* image, int width, int height) {
       delete data->prevFrame;
       data->prevFrame = data->frame;
       data->frame = frame;
-      stabilize(data->kalman, data->pid, data->prevFrame, data->frame);
+      stabilize(data->kalman, data->prevFrame, data->frame);
    }
    return 0;
 }
