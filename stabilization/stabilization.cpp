@@ -231,19 +231,22 @@ void refineTransform(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
    //cout << "After snapping: " << frame->transform << endl;
 }
 
-void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
-   findFeatures(lastFrame);
-   findTransform(lastFrame, frame);
-   refineTransform(kalman, lastFrame, frame);
-   // Apply transformation
-   Mat mask = Mat::ones(frame->img.rows, frame->img.cols, CV_64F);
-   Mat warpedMask = Mat::zeros(frame->img.rows, frame->img.cols, CV_64F);
+void applyTransform(Frame* frame) {
    frame->stabImg = lastFrame->stabImg.clone();
    warpPerspective(frame->img, frame->stabImg, frame->transform, frame->img.size());
+   Mat mask = Mat::ones(frame->img.rows, frame->img.cols, CV_64F);
+   Mat warpedMask = Mat::zeros(frame->img.rows, frame->img.cols, CV_64F);
    warpPerspective(mask,warpedMask,frame->transform,frame->img.size());
    for(int i=0;i<mask.rows;i++) for(int j=0;j<mask.cols;j++) {
       frame->stabImg.at<Vec3b>(i,j) += (1-warpedMask.at<double>(i,j))*lastFrame->stabImg.at<Vec3b>(i,j);
    }
+}
+
+void stabilize(KalmanFilter* kalman, Frame* lastFrame, Frame* frame) {
+   findFeatures(lastFrame);
+   findTransform(lastFrame, frame);
+   refineTransform(kalman, lastFrame, frame);
+   applyTransform(frame);
    // Draw circles around detected features.
    //for(uint i = 0; i < frame->features.size(); i++) {
    //   circle(frame->img,frame->features[i],10,-1);
