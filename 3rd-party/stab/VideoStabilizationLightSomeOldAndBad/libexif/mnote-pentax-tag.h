@@ -1,0 +1,151 @@
+/* mnote-pentax-tag.h
+ *
+ * Copyright © 2002, 2003 Lutz Mueller <lutz@users.sourceforge.net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details. 
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __MNOTE_PENTAX_TAG_H__
+#define __MNOTE_PENTAX_TAG_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+/*
+ * Missing features which are probably in the unknowns somewhere ...
+ * 1/ AF Area (Wide, Spot, Free)
+ * 2/ AE Metering (Multi segment, Centre-weighted, Spot)
+ * 3/ 
+ */
+
+typedef int MnotePentaxTag;
+#define MNOTE_PENTAX_TAG_MODE			0x0001
+#define MNOTE_PENTAX_TAG_QUALITY		0x0002
+#define MNOTE_PENTAX_TAG_FOCUS			0x0003
+#define MNOTE_PENTAX_TAG_FLASH			0x0004
+#define MNOTE_PENTAX_TAG_UNKNOWN_05		0x0005
+#define MNOTE_PENTAX_TAG_UNKNOWN_06		0x0006
+#define MNOTE_PENTAX_TAG_WHITE_BALANCE	0x0007
+#define MNOTE_PENTAX_TAG_UNKNOWN_08		0x0008
+#define MNOTE_PENTAX_TAG_UNKNOWN_09		0x0009
+#define MNOTE_PENTAX_TAG_ZOOM			0x000a
+#define MNOTE_PENTAX_TAG_SHARPNESS		0x000b
+#define MNOTE_PENTAX_TAG_CONTRAST		0x000c
+#define MNOTE_PENTAX_TAG_SATURATION		0x000d
+#define MNOTE_PENTAX_TAG_UNKNOWN_14		0x000e
+#define MNOTE_PENTAX_TAG_UNKNOWN_15		0x000f
+#define MNOTE_PENTAX_TAG_UNKNOWN_16		0x0010
+#define MNOTE_PENTAX_TAG_UNKNOWN_17		0x0011
+#define MNOTE_PENTAX_TAG_UNKNOWN_18		0x0012
+#define MNOTE_PENTAX_TAG_UNKNOWN_19		0x0013
+#define MNOTE_PENTAX_TAG_ISO_SPEED		0x0014
+#define MNOTE_PENTAX_TAG_UNKNOWN_21		0x0015
+#define MNOTE_PENTAX_TAG_COLOR			0x0017
+#define MNOTE_PENTAX_TAG_UNKNOWN_24		0x0018
+#define MNOTE_PENTAX_TAG_UNKNOWN_25		0x0019
+#define MNOTE_PENTAX_TAG_PRINTIM		0x0e00
+#define MNOTE_PENTAX_TAG_TZ_CITY		0x1000
+#define MNOTE_PENTAX_TAG_TZ_DST			0x1001
+
+/* Pentax v2, v3: real values + our proprietary base to distinguish from v1 */
+#define MNOTE_PENTAX2_TAG_BASE					0x4000
+#define MNOTE_PENTAX2_TAG_MODE					0x4001
+#define MNOTE_PENTAX2_TAG_PREVIEW_SIZE			0x4002
+#define MNOTE_PENTAX2_TAG_PREVIEW_LENGTH		0x4003
+#define MNOTE_PENTAX2_TAG_PREVIEW_START			0x4004
+#define MNOTE_PENTAX2_TAG_MODEL_ID				0x4005
+#define MNOTE_PENTAX2_TAG_DATE					0x4006
+#define MNOTE_PENTAX2_TAG_TIME					0x4007
+#define MNOTE_PENTAX2_TAG_QUALITY				0x4008
+#define MNOTE_PENTAX2_TAG_IMAGE_SIZE			0x4009
+#define MNOTE_PENTAX2_TAG_PICTURE_MODE			0x400b
+#define MNOTE_PENTAX2_TAG_FLASH_MODE			0x400c
+#define MNOTE_PENTAX2_TAG_FOCUS_MODE			0x400d
+#define MNOTE_PENTAX2_TAG_AFPOINT_SELECTED		0x400e
+#define MNOTE_PENTAX2_TAG_AUTO_AFPOINT			0x400f
+#define MNOTE_PENTAX2_TAG_FOCUS_POSITION		0x4010
+#define MNOTE_PENTAX2_TAG_EXPOSURE_TIME			0x4012
+#define MNOTE_PENTAX2_TAG_FNUMBER				0x4013
+#define MNOTE_PENTAX2_TAG_ISO					0x4014
+#define MNOTE_PENTAX2_TAG_EXPOSURE_COMPENSATION 0x4016
+#define MNOTE_PENTAX2_TAG_METERING_MODE			0x4017
+#define MNOTE_PENTAX2_TAG_AUTO_BRACKETING		0x4018
+#define MNOTE_PENTAX2_TAG_WHITE_BALANCE			0x4019
+#define MNOTE_PENTAX2_TAG_WHITE_BALANCE_MODE	0x401a
+#define MNOTE_PENTAX2_TAG_BLUE_BALANCE			0x401b
+#define MNOTE_PENTAX2_TAG_RED_BALANCE			0x401c
+#define MNOTE_PENTAX2_TAG_FOCAL_LENGTH			0x401d
+#define MNOTE_PENTAX2_TAG_DIGITAL_ZOOM			0x401e
+#define MNOTE_PENTAX2_TAG_SATURATION			0x401f
+#define MNOTE_PENTAX2_TAG_CONTRAST				0x4020
+#define MNOTE_PENTAX2_TAG_SHARPNESS				0x4021
+#define MNOTE_PENTAX2_TAG_WORLDTIME_LOCATION	0x4022
+#define MNOTE_PENTAX2_TAG_HOMETOWN_CITY			0x4023
+#define MNOTE_PENTAX2_TAG_DESTINATION_CITY		0x4024
+#define MNOTE_PENTAX2_TAG_HOMETOWN_DST			0x4025
+#define MNOTE_PENTAX2_TAG_DESTINATION_DST		0x4026
+#define MNOTE_PENTAX2_TAG_FRAME_NUMBER			0x4029
+#define MNOTE_PENTAX2_TAG_IMAGE_PROCESSING		0x4032
+#define MNOTE_PENTAX2_TAG_PICTURE_MODE2			0x4033
+#define MNOTE_PENTAX2_TAG_DRIVE_MODE			0x4034
+#define MNOTE_PENTAX2_TAG_COLOR_SPACE			0x4037
+#define MNOTE_PENTAX2_TAG_IMAGE_AREA_OFFSET		0x4038
+#define MNOTE_PENTAX2_TAG_RAW_IMAGE_SIZE		0x4039
+#define MNOTE_PENTAX2_TAG_AFPOINTS_USED			0x403c
+#define MNOTE_PENTAX2_TAG_LENS_TYPE				0x403f
+#define MNOTE_PENTAX2_TAG_CAMERA_TEMPERATURE	0x4047
+#define MNOTE_PENTAX2_TAG_NOISE_REDUCTION		0x4049
+#define MNOTE_PENTAX2_TAG_FLASH_EXPOSURE_COMP	0x404d
+#define MNOTE_PENTAX2_TAG_IMAGE_TONE			0x404f
+#define MNOTE_PENTAX2_TAG_SHAKE_REDUCTION_INFO	0x405c
+#define MNOTE_PENTAX2_TAG_BLACK_POINT			0x4200
+#define MNOTE_PENTAX2_TAG_WHITE_POINT			0x4201
+#define MNOTE_PENTAX2_TAG_AE_INFO				0x4206
+#define MNOTE_PENTAX2_TAG_LENS_INFO				0x4207
+#define MNOTE_PENTAX2_TAG_FLASH_INFO			0x4208
+#define MNOTE_PENTAX2_TAG_CAMERA_INFO			0x4215
+#define MNOTE_PENTAX2_TAG_BATTERY_INFO			0x4216
+#define MNOTE_PENTAX2_TAG_HOMETOWN_CITY_CODE	0x5000
+#define MNOTE_PENTAX2_TAG_DESTINATION_CITY_CODE 0x5001
+
+/* Casio v2: some Casio v2 tags match Pentax v2 tags */
+#define MNOTE_CASIO2_TAG_BASE					0x4000
+#define MNOTE_CASIO2_TAG_PREVIEW_START			0x6000
+#define MNOTE_CASIO2_TAG_WHITE_BALANCE_BIAS		0x6011
+#define MNOTE_CASIO2_TAG_WHITE_BALANCE			0x6012
+#define MNOTE_CASIO2_TAG_OBJECT_DISTANCE		0x6022
+#define MNOTE_CASIO2_TAG_FLASH_DISTANCE			0x6034
+#define MNOTE_CASIO2_TAG_RECORD_MODE			0x7000
+#define MNOTE_CASIO2_TAG_SELF_TIMER				0x7001
+#define MNOTE_CASIO2_TAG_QUALITY				0x7002
+#define MNOTE_CASIO2_TAG_FOCUS_MODE				0x7003
+#define MNOTE_CASIO2_TAG_TIME_ZONE				0x7006
+#define MNOTE_CASIO2_TAG_BESTSHOT_MODE			0x7007
+#define MNOTE_CASIO2_TAG_CCS_ISO_SENSITIVITY	0x7014
+#define MNOTE_CASIO2_TAG_COLOR_MODE				0x7015
+#define MNOTE_CASIO2_TAG_ENHANCEMENT			0x7016
+#define MNOTE_CASIO2_TAG_FINER					0x7017
+
+const char *mnote_pentax_tag_get_name        (MnotePentaxTag tag);
+const char *mnote_pentax_tag_get_title       (MnotePentaxTag tag);
+const char *mnote_pentax_tag_get_description (MnotePentaxTag tag);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __MNOTE_PENTAX_TAG_H__ */

@@ -1,0 +1,125 @@
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by Stabilize.rc
+//
+#define IDC_MYICON                      2
+#define IDD_STABILIZE_DIALOG            102
+#define IDS_APP_TITLE                   103
+#define IDD_ABOUTBOX                    103
+#define IDM_ABOUT                       104
+#define IDM_EXIT                        105
+#define IDI_STABILIZE                   107
+#define IDI_SMALL                       108
+#define IDC_STABILIZE                   109
+#define IDR_MAINFRAME                   128
+#define IDD_MODE_DIALOG                 129
+#define IDD_PARAMS_DIALOG               130
+#define IDD_DISTORTION_DIALOG           131
+#define IDD_DESTAB_DIALOG               132
+#define IDD_ANALYZE_DIALOG              133
+#define IDD_CAMERA_DIALOG               134
+#define IDD_DIALOG1                     135
+#define IDD_SAVING_DIALOG               135
+#define IDD_DIALOG2                     136
+#define IDD_MOTION_DIALOG               136
+#define IDD_RTP_DIALOG                  137
+#define IDC_UNSTABILIZE                 1001
+#define IDC_EDIT_ITERATIONS             1001
+#define IDC_RADIO3                      1002
+#define IDC_ANALYZE                     1002
+#define IDC_EDIT_PYR_SIZE               1002
+#define IDC_EDIT_DOWNSCALE              1003
+#define IDC_BASE                        1003
+#define IDC_EDIT_ALPHA                  1004
+#define IDC_BASE2                       1004
+#define IDC_MOTION                      1004
+#define IDC_TRACK                       1005
+#define IDC_EDIT_BAND_WIDTH             1006
+#define IDC_CHECK_DELETE                1007
+#define IDC_EDIT_ITERATIONS1            1007
+#define IDC_CHECK1                      1008
+#define IDC_DISTORTION_COMPENSATE       1008
+#define IDC_EDIT_BAND_WIDTH3            1008
+#define IDC_EDIT_ITERATIONS2            1008
+#define IDC_DEINTERLACE                 1008
+#define IDC_CHECK_CAM_PAN               1008
+#define IDC_CHECK_CAM_PANASONIC         1008
+#define IDC_DISTORTION_FX               1009
+#define IDC_EDIT_ITERATIONS3            1009
+#define IDC_EDIT_CORNER_DISTANCE        1009
+#define IDC_DISTORTION_FY               1010
+#define IDC_DESTAB_SHIFT_X              1010
+#define IDC_EDIT_SAFE_SHIFT             1010
+#define IDC_DISTORTION_CX               1011
+#define IDC_DESTAB_SHIFT_Y              1011
+#define IDC_EDIT_SHIFT_PARAM            1011
+#define IDC_DISTORTION_CY               1012
+#define IDC_DESTAB_ANGLE                1012
+#define IDC_ANALYZE_SHIFT_X             1012
+#define IDC_DESTAB_SHIFT_X3             1012
+#define IDC_DESTAB_SHIFT_ANGLE          1012
+#define IDC_DISTORTION_K1               1013
+#define IDC_ANALYZE_SHIFT_Y             1013
+#define IDC_DISTORTION_K2               1014
+#define IDC_ANALYZE_SHIFT_ANGLE         1014
+#define IDC_CAM_IP                      1014
+#define IDC_EDIT_CAM_IP                 1014
+#define IDC_DISTORTION_P1               1015
+#define IDC_EDIT_CAM_PORT               1015
+#define IDC_DISTORTION_P2               1016
+#define IDC_DISTORTION_P3               1017
+#define IDC_SAVE_RES_VIDEO              1017
+#define IDC_RES_VIDEO_PATH              1018
+#define IDC_SAVE_BASE_VIDEO             1019
+#define IDC_MOTION_MOVED                1019
+#define IDC_BASE_VIDEO_PATH2            1020
+#define IDC_BASE_VIDEO_PATH             1020
+#define IDC_MOTION_STAYED               1020
+#define IDC_MOTION_BASE                 1021
+#define IDC_MOTION_MIN_OBJ              1023
+#define IDC_MOTION_MIN_SPACE            1024
+#define IDC_PARAMS_BGR                  1024
+#define IDC_EDIT_BGR                    1024
+#define IDC_MOTION_MIN_SPACE2           1025
+#define IDC_MOTION_EPS                  1025
+#define IDC_MOTION_ITER                 1026
+#define IDC_MOTION_BASE_EPS             1027
+#define IDC_MOTION_DOWNSCALE            1028
+#define IDC_MOTION_ITER4                1029
+#define IDC_MOTION_SMOOTH               1029
+#define ID_FILE_OPENFILE                32771
+#define ID_FILE_OPENURL                 32772
+#define IDM_OPENFILE                    32773
+#define IDM_OPENURL                     32774
+#define ID_MODE_STABILIZATION           32775
+#define ID_MODE_UNSTABILIZATION         32776
+#define ID_MODE_ANALYZE                 32777
+#define ID_MODE                         32778
+#define IDM_PARAMS                      32779
+#define IDM_MODE                        32780
+#define ID_TOOLS_RESTART                32781
+#define ID_TOOLS_START                  32782
+#define ID_TOOLS_STOP                   32783
+#define ID_TOOLS_PAUSE                  32784
+#define ID_TOOLS_DISTORTION             32785
+#define ID_TOOLS_DESTABILIZINGPARAMS    32786
+#define ID_TOOLS_ANALIZATIONRESULTS     32787
+#define ID_FILE_OPENVIDEO               32788
+#define IDM_OPENVIDEO                   32789
+#define ID_TOOLS_SAVINGVIDEOPARAMS      32790
+#define ID_TOOLS_MOTIONCAPTUREPARAMS    32791
+#define ID_32792                        32792
+#define ID_OPEN_RTP                     32793
+#define IDC_STATIC                      -1
+
+// Next default values for new objects
+// 
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NO_MFC                     1
+#define _APS_NEXT_RESOURCE_VALUE        137
+#define _APS_NEXT_COMMAND_VALUE         32794
+#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_SYMED_VALUE           111
+#endif
+#endif

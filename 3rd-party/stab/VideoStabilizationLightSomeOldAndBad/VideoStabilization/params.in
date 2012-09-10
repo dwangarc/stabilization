@@ -1,0 +1,16 @@
+Width 640
+Height 480
+Downscale 1
+Debug 0
+StartPicture 40
+Alpha 1
+Beta 0.0
+Sigma 2.0
+KalmanDispAngle 0.1
+KalmanDispShift 1
+KalmanDispAngleMeasure 1
+KalmanDispShiftMeasure 10
+KalmanKoeffExactness 1
+KalmanF_Koeff 0.9
+BandWidth 16
+StepSize 1
